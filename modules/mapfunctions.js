@@ -2273,6 +2273,34 @@ function RselectShip() {
     return selectedMap;
 }
 
+function RselectSmithy() {
+    var selectedMap = "create";
+    var levelzones = RsmithyCalc(true, false, false, false);
+    var special = RsmithyCalc(false, false, true, false);
+    
+    if (levelzones != 0) {
+            for (var map in game.global.mapsOwnedArray) {
+                if (!game.global.mapsOwnedArray[map].noRecycle && ((game.global.world + levelzones) == game.global.mapsOwnedArray[map].level) && game.global.mapsOwnedArray[map].bonus == special) {
+                    selectedMap = game.global.mapsOwnedArray[map].id;
+                    break;
+                } else {
+                    selectedMap = "create";
+                }
+            }
+        } else if (levelzones == 0) {
+            for (var map in game.global.mapsOwnedArray) {
+                if (!game.global.mapsOwnedArray[map].noRecycle && game.global.world == game.global.mapsOwnedArray[map].level && game.global.mapsOwnedArray[map].bonus == special) {
+                    selectedMap = game.global.mapsOwnedArray[map].id;
+                    break;
+                } else {
+                    selectedMap = "create";
+                }
+            }
+        }
+    }
+    return selectedMap;
+}
+
 function RselectOther(other) {
     var selectedMap = "create";
     var level = 0;
@@ -2292,9 +2320,6 @@ function RselectOther(other) {
     } else if (other == "dtime") {
         level = getPageSetting('Rdtimefarmlevel');
         levelzones = RtimeFarm(false, true, false, false, true);
-    } else if (other == "smithy") {
-        level = 1;
-        levelzones = RsmithyCalc(true, false, false, false);
     } else if (other == "tribute") {
         level = getPageSetting('Rtributefarmlevel');
         levelzones = RtributeFarm(false, true, false, false);
@@ -2354,7 +2379,7 @@ function RselectMap(selectedMap) {
             } else if (Rshould(false, true) == "dtime") {
                 selectedMap = RselectOther("dtime");
             } else if (Rshould(false, true) == "smithy") {
-                selectedMap = RselectOther("smithy");
+                selectedMap = RselectSmithy();
             } else if (Rshould(false, true) == "tribute") {
                 selectedMap = RselectOther("tribute");
             } else if (Rshould(false, true) == "quest") {
