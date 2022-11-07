@@ -866,19 +866,19 @@ function RsmithyCalc(level, selection, special, gather) {
     }
 
     if (smithymetal && smithywood) {
-        if (selection) return "Farmlands";
+        if (selection) return game.global.farmlandsUnlocked ? "Farmlands" : "Plentiful";
         else if (special) return getHighestLevelCleared(true) > 65 ? "hc" : "lc";
         else if (gather) return "metal";
     }
 
     if (smithywood) {
-        if (selection) return "Farmlands";
+        if (selection) return game.global.farmlandsUnlocked ? "Farmlands" : "Plentiful";
         else if (special) return getHighestLevelCleared(true) > 85 ? "lwc" : "swc";
         else if (gather) return "wood";
     }
 
     if (smithymetal) {
-        if (selection) return "Farmlands";
+        if (selection) return game.global.farmlandsUnlocked ? "Farmlands" : "Plentiful";
         else if (special) return getHighestLevelCleared(true) > 85 ? "lmc" : "smc";
         else if (gather) return "metal";
     }
