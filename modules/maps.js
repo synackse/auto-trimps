@@ -888,6 +888,7 @@ function RupdateAutoMapsStatus(get) {
     else if (Rshoulddoquest) status = 'Questing';
     else if (Rshouldtimefarm) status = 'Time Farming';
     else if (Rdshouldtimefarm) status = 'Daily Time Farming';
+    else if (Rshouldsmithyfarm) status = 'Smithy Farming';
     else if (Rshouldtributefarm) status = 'Tribute Farming';
     else if (Rshoulddobogs) status = 'Black Bogs';
     else if (RdoMaxMapBonus) status = 'Max Map Bonus After Zone';
@@ -1045,6 +1046,7 @@ function RautoMap() {
     RshouldDoMaps = false;
     Rshouldtimefarm = false;
     Rdshouldtimefarm = false;
+    Rshouldsmithyfarm = false;
     Rshouldtributefarm = false;
     Rshoulddobogs = false;
     Rshoulddopraid = false;
@@ -1118,6 +1120,11 @@ function RautoMap() {
     //dTime Farm
     if (game.global.challengeActive == 'Daily' && getPageSetting('Rdtimefarm') == 1) {
         RtimeFarm(true, false, false, false, true);
+    }
+
+    //Smithy Farm
+    if (getPageSetting('Rsmithyfarm')) {
+        RsmithyFarm(false);
     }
 
     //Tribute Farm
@@ -1453,6 +1460,9 @@ function RautoMap() {
             }
             if (Rshould(false, true) == "dtime") {
                 RtimeFarmMap(true);
+            }
+            if (Rshould(false, true) == "smithy") {
+                RsmithyFarmMap();
             }
             if (Rshould(false, true) == "tribute") {
                 RtributeFarmMap();
