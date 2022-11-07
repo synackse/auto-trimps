@@ -25,6 +25,10 @@ var Rshouldtimefarm = false;
 var Rdtimefarm = false;
 var Rdshouldtimefarm = false;
 
+//Smithy Farm
+var Rsmithyfarm = false;
+var Rshouldsmithyfarm = false;
+
 //Tribute
 var Rshouldtributefarm = false;
 
@@ -157,6 +161,10 @@ function RresetVars() {
     //dTime Farm
     Rdtimefarm = false;
     Rdshouldtimefarm = false;
+
+    //Smithy Farm
+    Rsmithyfarm = false;
+    Rshouldsmithyfarm = false;
 
     //Tribute
     Rshouldtributefarm = false;
@@ -794,6 +802,97 @@ function RtimeFarmMap(daily) {
 
     biomeAdvMapsSelect.value = daily ? RtimeFarm(false, false, true, false, true) : RtimeFarm(false, false, true, false, false);
     document.getElementById("advSpecialSelect").value = daily ? RtimeFarm(false, false, false, true, true) : RtimeFarm(false, false, false, true, false);
+    updateMapCost();
+}
+
+//Smithy Farm
+
+function RsmithyFarm(amount) {
+    var smithyfarmzone = getPageSetting('Rsmithyfarmzone');
+    var smithyfarmindex = smithyfarmzone.indexOf(game.global.world);
+
+    var smithyfarmcell = getPageSetting('Rsmithyfarmcell')[smithyfarmindex];
+    var smithyfarmsmithy = getPageSetting('Rsmithyfarmamount');
+    var smithys = game.buildings.Smithy.owned;
+    var smithyzones = smithyfarmsmithy[smithyfarmindex];
+
+    if (amount) return smithyzones;
+
+    if (smithyfarmzone.includes(game.global.world)) {
+        if (game.global.lastClearedCell + 2 >= smithyfarmcell && smithyzones > smithys && smithyzones > 0) {
+            Rshouldsmithyfarm = true;
+        }
+    }
+}
+
+function RmapLevelCalc() {
+    var HD = (RcalcHDratio() / 1.5);
+    if (HD >= 10000) return -3;
+    else if (HD >= 5000) return -2;
+    else if (HD >= 500) return -1;
+    else if (HD <= 40) return 0;
+    else if (HD <= 1) return 1;
+    else if (HD <= 0.5) return 2;
+    else if (HD <= 0.1) return 3;
+    else if (HD <= 0.05) return 4;
+    else if (HD <= 0.01) return 5;
+    else if (HD <= 0.005) return 6;
+    else if (HD <= 0.0001) return 7;
+    else if (HD <= 0.00005) return 8;
+}
+
+function RsmithyCalc(level, selection, special, gather) {
+    var smithys = game.buildings.Smithy.owned;
+    var goal = smithys - RsmithyFarm(true);
+    var afford = true;
+    if (goal > 0) afford = canAffordBuilding("Smithy", false, false, false, false, goal);
+
+    if (!afford) {
+        var smithywood = game.resources.wood.owned - getBuildingItemPrice(game.buildings.Smithy, "wood", false, goal);
+        var smithymetal = game.resources.metal.owned - getBuildingItemPrice(game.buildings.Smithy, "metal", false, goal);
+        var smithygems = game.resources.gems.owned - getBuildingItemPrice(game.buildings.Smithy, "gems", false, goal);
+    }
+
+    if (level) return RmapLevelCalc();
+
+    if (smithygems) {
+        if (selection) return "Depths";
+        else if (special) return getHighestLevelCleared(true) > 65 ? "hc" : "lc";
+        else if (gather) return "metal";
+    }
+
+    if (smithymetal && smithywood) {
+        if (selection) return "Farmlands";
+        else if (special) return getHighestLevelCleared(true) > 65 ? "hc" : "lc";
+        else if (gather) return "metal";
+    }
+
+    if (smithywood) {
+        if (selection) return "Farmlands";
+        else if (special) return getHighestLevelCleared(true) > 85 ? "lwc" : "swc";
+        else if (gather) return "wood";
+    }
+
+    if (smithymetal) {
+        if (selection) return "Farmlands";
+        else if (special) return getHighestLevelCleared(true) > 85 ? "lmc" : "smc";
+        else if (gather) return "metal";
+    }
+}
+
+function RsmithyFarmMap() {
+    if (getPageSetting('Rsmithyfarmlevel') != 0) {
+        levelzones = RsmithyCalc(true, false, false, false);
+        if (levelzones > 0) {
+            document.getElementById("mapLevelInput").value = game.global.world;
+            document.getElementById("advExtraLevelSelect").value = levelzones;
+        } else if (levelzones < 0) {
+            document.getElementById("mapLevelInput").value = (game.global.world + levelzones);
+        }
+    }
+
+    biomeAdvMapsSelect.value = RsmithyCalc(false, true, false, false);
+    document.getElementById("advSpecialSelect").value = RsmithyCalc(false, false, true, false);
     updateMapCost();
 }
 
@@ -2045,6 +2144,7 @@ function Rshould(any, one) {
                 RdoVoids ||
                 Rshouldtimefarm ||
                 Rdshouldtimefarm ||
+                Rshouldsmithyfarm ||
                 Rshouldtributefarm ||
                 Rshoulddoquest > 0 ||
                 Rshouldmayhem > 0 ||
@@ -2069,6 +2169,7 @@ function Rshould(any, one) {
         else if (Rshouldshipfarm) should = "ship";
         else if (Rshouldtimefarm) should = "time";
         else if (Rdshouldtimefarm) should = "dtime";
+        else if (Rshouldsmithyfarm) should = "smithy";
         else if (Rshouldtributefarm) should = "tribute";
         else if (Rshouldequipfarm) should = "equip";
         else if (Rshoulddoquest) should = "quest";
@@ -2188,6 +2289,9 @@ function RselectOther(other) {
     } else if (other == "dtime") {
         level = getPageSetting('Rdtimefarmlevel');
         levelzones = RtimeFarm(false, true, false, false, true);
+    } else if (other == "smithy") {
+        level = getPageSetting('Rsmithyfarmlevel');
+        levelzones = RmapLevelCalc();
     } else if (other == "tribute") {
         level = getPageSetting('Rtributefarmlevel');
         levelzones = RtributeFarm(false, true, false, false);
@@ -2246,6 +2350,8 @@ function RselectMap(selectedMap) {
                 selectedMap = RselectOther("time");
             } else if (Rshould(false, true) == "dtime") {
                 selectedMap = RselectOther("dtime");
+            } else if (Rshould(false, true) == "smithy") {
+                selectedMap = RselectOther("smithy");
             } else if (Rshould(false, true) == "tribute") {
                 selectedMap = RselectOther("tribute");
             } else if (Rshould(false, true) == "quest") {
@@ -2292,6 +2398,7 @@ function RmapRepeat(selectedMap, shouldDoHealthMaps, restartVoidMap) {
                     RshouldFarm ||
                     Rshouldtimefarm ||
                     Rdshouldtimefarm ||
+                    Rshouldsmithyfarm ||
                     Rshouldtributefarm ||
                     Rshoulddobogs ||
                     (Rshoulddoquest > 0) ||
@@ -2341,6 +2448,7 @@ function RmapRepeat(selectedMap, shouldDoHealthMaps, restartVoidMap) {
             !RshouldDoMaps &&
             !Rshouldtimefarm &&
             !Rdshouldtimefarm &&
+            !Rshouldsmithyfarm &&
             !Rshouldtributefarm &&
             Rshoulddoquest <= 0 &&
             Rshouldmayhem <= 0 &&
