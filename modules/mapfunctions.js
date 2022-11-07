@@ -886,14 +886,12 @@ function RsmithyCalc(level, selection, special, gather) {
 }
 
 function RsmithyFarmMap() {
-    if (getPageSetting('Rsmithyfarmlevel') != 0) {
-        levelzones = RsmithyCalc(true, false, false, false);
-        if (levelzones > 0) {
-            document.getElementById("mapLevelInput").value = game.global.world;
-            document.getElementById("advExtraLevelSelect").value = levelzones;
-        } else if (levelzones < 0) {
-            document.getElementById("mapLevelInput").value = (game.global.world + levelzones);
-        }
+    var levelzones = RsmithyCalc(true, false, false, false);
+    if (levelzones > 0) {
+        document.getElementById("mapLevelInput").value = game.global.world;
+        document.getElementById("advExtraLevelSelect").value = levelzones;
+    } else if (levelzones < 0) {
+        document.getElementById("mapLevelInput").value = (game.global.world + levelzones);
     }
 
     biomeAdvMapsSelect.value = RsmithyCalc(false, true, false, false);
@@ -2295,8 +2293,8 @@ function RselectOther(other) {
         level = getPageSetting('Rdtimefarmlevel');
         levelzones = RtimeFarm(false, true, false, false, true);
     } else if (other == "smithy") {
-        level = getPageSetting('Rsmithyfarmlevel');
-        levelzones = RmapLevelCalc();
+        level = 1;
+        levelzones = RsmithyCalc(true, false, false, false);
     } else if (other == "tribute") {
         level = getPageSetting('Rtributefarmlevel');
         levelzones = RtributeFarm(false, true, false, false);
