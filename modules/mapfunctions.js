@@ -410,7 +410,7 @@ function RfragCheck(what) {
     var levelzones = farmlevel[farmlevelindex];
 
     if (what == "alch") {
-        selection = getPageSetting('Ralchfarmselection')[alchfarmselectionindex];
+        selection = getPageSetting('Ralchfarmselection')[farmlevelindex];
     }
 
     if (frag) cost = RminFragMap(selection, levelzones, special);
