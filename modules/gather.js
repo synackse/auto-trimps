@@ -303,23 +303,28 @@ function RmanualLabor2() {
         }
     } 
 	
-    //DAILY TIMEFARM
-    else if (Rdshouldtimefarm) {
-        var dtimefarmzone = getPageSetting('Rdtimefarmzone');
-        var dtimefarmlevelindex = dtimefarmzone.indexOf(game.global.world);
-        if (autoTrimpSettings.Rdtimefarmgather.value[dtimefarmlevelindex] == "food") {
+    //SMITHY
+    else if (Rshouldsmithyfarm) {
+        setGather(RsmithyCalc(false, false, false, true));
+    }
+	
+    //SHIP
+    else if (Rshouldshipfarm) {
+        var shipfarmzone = getPageSetting('Rtributefarmzone');
+        var tributefarmlevelindex = tributefarmzone.indexOf(game.global.world);
+        if (autoTrimpSettings.Rtributegatherselection.value[tributefarmlevelindex] == "food") {
             setGather('food');
         }
-        if (autoTrimpSettings.Rdtimefarmgather.value[dtimefarmlevelindex] == "wood") {
+        if (autoTrimpSettings.Rtributegatherselection.value[tributefarmlevelindex] == "wood") {
             setGather('wood');
         }
-        if (autoTrimpSettings.Rdtimefarmgather.value[dtimefarmlevelindex] == "metal") {
+        if (autoTrimpSettings.Rtributegatherselection.value[tributefarmlevelindex] == "metal") {
             setGather('metal');
         }
-        if (autoTrimpSettings.Rdtimefarmgather.value[dtimefarmlevelindex] == "science") {
+        if (autoTrimpSettings.Rtributegatherselection.value[tributefarmlevelindex] == "science") {
             setGather('science');
         }
-    } 
+    }
 	
     //TRIBUTE
     else if (Rshouldtributefarm) {
