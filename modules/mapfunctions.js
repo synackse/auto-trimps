@@ -827,18 +827,22 @@ function RsmithyFarm(amount) {
 
 function RmapLevelCalc() {
     var HD = (RcalcHDratio() / 1.5);
-    if (HD >= 10000) return -3;
-    else if (HD >= 5000) return -2;
-    else if (HD >= 500) return -1;
-    else if (HD <= 40) return 0;
-    else if (HD <= 1) return 1;
-    else if (HD <= 0.5) return 2;
-    else if (HD <= 0.1) return 3;
-    else if (HD <= 0.05) return 4;
-    else if (HD <= 0.01) return 5;
-    else if (HD <= 0.005) return 6;
-    else if (HD <= 0.0001) return 7;
-    else if (HD <= 0.00005) return 8;
+    var level = 0;
+    
+    if (HD >= 10000) level = -3;
+    if (HD >= 5000) level = -2;
+    if (HD >= 500) level = -1;
+    if (HD <= 40) level = 0;
+    if (HD <= 1) level = 1;
+    if (HD <= 0.5) level = 2;
+    if (HD <= 0.1) level = 3;
+    if (HD <= 0.05) level = 4;
+    if (HD <= 0.01) level = 5;
+    if (HD <= 0.005) level = 6;
+    if (HD <= 0.0001) level = 7;
+    if (HD <= 0.00005) level = 8;
+    
+    return level;
 }
 
 function RsmithyCalc(level, selection, special, gather) {
