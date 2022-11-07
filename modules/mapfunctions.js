@@ -847,37 +847,38 @@ function RmapLevelCalc() {
 
 function RsmithyCalc(level, selection, special, gather) {
     var smithys = game.buildings.Smithy.owned;
-    var goal = smithys - RsmithyFarm(true);
+    var goal = RsmithyFarm(true) - smithys;
     var afford = true;
     if (goal > 0) afford = canAffordBuilding("Smithy", false, false, false, false, goal);
+    var smithywood, smithymetal, smithygems;
 
     if (!afford) {
-        var smithywood = game.resources.wood.owned - getBuildingItemPrice(game.buildings.Smithy, "wood", false, goal);
-        var smithymetal = game.resources.metal.owned - getBuildingItemPrice(game.buildings.Smithy, "metal", false, goal);
-        var smithygems = game.resources.gems.owned - getBuildingItemPrice(game.buildings.Smithy, "gems", false, goal);
+        smithywood = game.resources.wood.owned - getBuildingItemPrice(game.buildings.Smithy, "wood", false, goal);
+        smithymetal = game.resources.metal.owned - getBuildingItemPrice(game.buildings.Smithy, "metal", false, goal);
+        smithygems = game.resources.gems.owned - getBuildingItemPrice(game.buildings.Smithy, "gems", false, goal);
     }
 
     if (level) return RmapLevelCalc();
 
-    if (smithygems) {
+    if (!afford && smithygems < 0) {
         if (selection) return "Depths";
         else if (special) return getHighestLevelCleared(true) > 65 ? "hc" : "lc";
         else if (gather) return "metal";
     }
 
-    if (smithymetal && smithywood) {
+    if (!afford && smithymetal < 0 && smithywood < 0) {
         if (selection) return game.global.farmlandsUnlocked ? "Farmlands" : "Plentiful";
         else if (special) return getHighestLevelCleared(true) > 65 ? "hc" : "lc";
         else if (gather) return "metal";
     }
 
-    if (smithywood) {
+    if (!afford && smithywood < 0) {
         if (selection) return game.global.farmlandsUnlocked ? "Farmlands" : "Plentiful";
         else if (special) return getHighestLevelCleared(true) > 85 ? "lwc" : "swc";
         else if (gather) return "wood";
     }
 
-    if (smithymetal) {
+    if (!afford && smithymetal < 0) {
         if (selection) return game.global.farmlandsUnlocked ? "Farmlands" : "Plentiful";
         else if (special) return getHighestLevelCleared(true) > 85 ? "lmc" : "smc";
         else if (gather) return "metal";
