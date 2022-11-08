@@ -1389,6 +1389,9 @@ function RautoMap() {
     if (!game.global.preMapsActive && game.global.mapsActive) {
         RmapRepeat(selectedMap, shouldDoHealthMaps, restartVoidMap);
     }
+    
+    //Quest - no maps
+    if (Rshoulddoquest == 6) selectedMap = "world";
 
     //Maps please
     else if (!game.global.preMapsActive && !game.global.mapsActive) {
@@ -1396,10 +1399,6 @@ function RautoMap() {
             mapsClicked();
         }
     }
-    
-    //Quest again
-    
-    if (Rshoulddoquest == 6) selectedMap = "world";
 
     //### Creating Map Section
 
