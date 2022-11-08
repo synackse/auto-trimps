@@ -1399,7 +1399,7 @@ function RautoMap() {
     
     //Quest again
     
-    if (Rshoulddoquest == 6) selectedMap == "world";
+    if (Rshoulddoquest == 6) selectedMap = "world";
 
     //### Creating Map Section
 
