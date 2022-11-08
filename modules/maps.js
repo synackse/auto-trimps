@@ -926,9 +926,6 @@ function RautoMap() {
         RenoughHealth = true;
         RshouldFarm = false;
         RupdateAutoMapsStatus();
-        if (game.global.preMapsActive || game.global.mapsActive) {
-            mapsClicked();
-        }
         return;
     }
 
@@ -1399,6 +1396,10 @@ function RautoMap() {
             mapsClicked();
         }
     }
+    
+    //Quest again
+    
+    if (Rshoulddoquest == 6) selectedMap == "world";
 
     //### Creating Map Section
 
