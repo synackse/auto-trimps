@@ -921,7 +921,7 @@ function RupdateAutoMapsStatus(get) {
 function RautoMap() {
 
     //Failsafes
-    if (!game.global.mapsUnlocked || RcalcOurDmg("avg", false, true) <= 0 || Rshoulddoquest == 6) {
+    if (!game.global.mapsUnlocked || RcalcOurDmg("avg", false, true) <= 0) {
         RenoughDamage = true;
         RenoughHealth = true;
         RshouldFarm = false;
