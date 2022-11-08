@@ -926,6 +926,10 @@ function RautoMap() {
         RenoughHealth = true;
         RshouldFarm = false;
         RupdateAutoMapsStatus();
+        if (game.global.preMapsActive || game.global.mapsActive) {
+            mapsClicked();
+        }
+    }
         return;
     }
 
