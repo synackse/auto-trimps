@@ -1044,6 +1044,7 @@ function RautoMap() {
     var selectedMap = "world";
 
     RshouldDoMaps = false;
+    Rshouldfragfarm = false;
     Rshouldtimefarm = false;
     Rdshouldtimefarm = false;
     Rshouldsmithyfarm = false;
@@ -1445,6 +1446,9 @@ function RautoMap() {
             if (RshouldFarm || game.global.challengeActive == 'Transmute') {
                 biomeAdvMapsSelect.value = "Plentiful";
                 updateMapCost();
+            }
+            if (Rshould(false, true) == "frag") {
+                RfragMap();
             }
             if (Rshould(false, true) == "insanity") {
                 RinsanityMap();
