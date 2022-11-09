@@ -17,6 +17,9 @@ var Rquestshieldzone = 0;
 
 //### Map Module Vars
 
+//Frag Farm
+var Rshouldfragfarm = false;
+
 //Time Farm
 var Rtimefarm = false;
 var Rshouldtimefarm = false;
@@ -154,6 +157,9 @@ function RresetVars() {
 
     //### Map Modules
 
+    //Frag Farm
+    Rshouldfragfarm = false;
+
     //Time Farm
     Rtimefarm = false;
     Rshouldtimefarm = false;
@@ -283,7 +289,7 @@ function RfragMap() {
     document.getElementById("difficultyAdvMapsRange").value = 9;
     document.getElementById("sizeAdvMapsRange").value = 9;
     document.getElementById("advPerfectCheckbox").checked = true;
-    document.getElementById("mapLevelInput").value = game.global.world;
+    document.getElementById("mapLevelInput").value = (game.global.world - 1);
     updateMapCost();
 
     if (updateMapCost(true) > game.resources.fragments.owned) {
@@ -307,6 +313,26 @@ function RfragMap() {
         document.getElementById("advSpecialSelect").value = "0";
         updateMapCost();
     }
+}
+
+function RfragCalc(frag) {
+    if (frag > game.resources.fragments.owned) Rshouldfragfarm = true;
+    else Rshouldfragfarm = false;
+}
+
+function RselectFrag() {
+    var selectedMap = "create";
+    if (Rshouldfragfarm) {
+        for (var map in game.global.mapsOwnedArray) {
+            if (!game.global.mapsOwnedArray[map].noRecycle && (game.global.world - 1) == game.global.mapsOwnedArray[map].level) {
+                selectedMap = game.global.mapsOwnedArray[map].id;
+                break;
+            } else {
+                selectedMap = "create";
+            }
+        }
+    }
+    return selectedMap;
 }
 
 function RminFragMap(selection, number, special) {
@@ -897,6 +923,9 @@ function RsmithyFarmMap() {
     biomeAdvMapsSelect.value = RsmithyCalc(false, true, false, false);
     document.getElementById("advSpecialSelect").value = RsmithyCalc(false, false, true, false);
     updateMapCost();
+    if (updateMapCost(true) > game.resources.fragments.owned) {
+        RfragCalc(updateMapCost(true));
+    }
 }
 
 //Tribute Farm
@@ -2145,6 +2174,7 @@ function Rshould(any, one) {
         if (!Rshoulddopraid && !Rdshoulddopraid &&
             (RshouldDoMaps ||
                 RdoVoids ||
+                Rshouldfragfarm ||
                 Rshouldtimefarm ||
                 Rdshouldtimefarm ||
                 Rshouldsmithyfarm ||
@@ -2164,7 +2194,8 @@ function Rshould(any, one) {
 
     var should = "no";
     if (one && !Rshoulddopraid && !Rdshoulddopraid) {
-        if (Rshouldmayhem) should = "mayhem";
+        if (Rshouldfragfarm) should = "frag";
+        else if (Rshouldmayhem) should = "mayhem";
         else if (Rshouldpanda) should = "panda";
         else if (Rshouldinsanityfarm) should = "insanity";
         else if (Rshouldalchfarm) should = "alch";
@@ -2361,7 +2392,9 @@ function RselectMap(selectedMap) {
     if (Rshould(true, false)) {
         if (selectedMap == "world") {
 
-            if (Rshould(false, true) == "mayhem") {
+            if (Rshould(false, true) == "frag") {
+                selectedMap = RselectFrag();
+            } else if (Rshould(false, true) == "mayhem") {
                 selectedMap = RselectMayhem();
             } else if (Rshould(false, true) == "panda") {
                 selectedMap = RselectPanda();
@@ -2423,6 +2456,7 @@ function RmapRepeat(selectedMap, shouldDoHealthMaps, restartVoidMap) {
                     RvanillaMAZ ||
                     RdoMaxMapBonus ||
                     RshouldFarm ||
+                    Rshouldfragfarm ||
                     Rshouldtimefarm ||
                     Rdshouldtimefarm ||
                     Rshouldsmithyfarm ||
@@ -2463,6 +2497,7 @@ function RmapRepeat(selectedMap, shouldDoHealthMaps, restartVoidMap) {
         if (
             !Rshoulddopraid &&
             !RAMPfragfarming &&
+            !Rshouldfragfarm &&
             !Rdshoulddopraid &&
             !RdAMPfragfarming &&
             !Rshouldinsanityfarm &&
