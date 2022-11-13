@@ -29,21 +29,21 @@ function initializeAutoTrimps() {
 
 var changelogList = [];
 changelogList.push({
+    date: "13/11/2022",
+    version: "v5.2.1",
+    description: "<b>Trimps v5.8.0</b> Added Smithy farming. Changed Scryer stuff. U1 Calc slightly more accurate. Changed some colours and setting descriptions like AutoHeirlooms. Let me know if something is broken. ",
+    isNew: true
+});
+changelogList.push({
     date: "28/10/2022",
     version: "v5.2.0",
     description: "<b>Trimps v5.8.0</b> Changed U2 Automaps so there might be problems, let me know if there is. Autogiga, Better stance swap, U1 Calc fixed. ",
-    isNew: true
+    isNew: false
 });
 changelogList.push({
     date: "17/08/2022",
     version: "v5.1.1",
     description: "<b>Trimps v5.8.0</b> AutoShrine added. Daily Heirloom Swap added. Various bug fixes. ",
-    isNew: false
-});
-changelogList.push({
-    date: "01/08/2022",
-    version: "v5.1.0",
-    description: "<b>Trimps v5.8.0</b> Calc updated for 5.8. Some Mutation settings in combat. A few changes to ship farming so it always uses a LSC. ",
     isNew: false
 });
 
