@@ -2325,3 +2325,24 @@ function autoBoneChargeWhenMax() {
     debug("Max bone charges reached! Used a bone charge.", "general", "*bolt");
   }
 }
+
+function Rarmydeath() {
+    if (game.global.mapsActive) return false;
+    var cell = game.global.lastClearedCell + 1;
+    var attack = game.global.gridArray[cell].attack * dailyModifiers.empower.getMult(game.global.dailyChallenge.empower.strength, game.global.dailyChallenge.empower.stacks) * Math.pow(game.portal.Equality.modifier, game.portal.Equality.scalingCount);
+    var health = game.global.soldierHealth + game.global.soldierEnergyShield;
+    var healthmax = game.global.soldierHealthMax * (Fluffy.isRewardActive('shieldlayer') ? 1 + (getEnergyShieldMult() * (1 + Fluffy.isRewardActive('shieldlayer'))) : 1 + getEnergyShieldMult());
+
+    if (attack >= healthmax && game.portal.Equality.getActiveLevels() < game.portal.Equality.radLevel) return false;
+    else if (attack >= health) return true;
+    else return false;
+}
+
+function Ravoidempower() {
+    if (Rarmydeath()) {
+        if (typeof game.global.dailyChallenge.bogged === 'undefined' && typeof game.global.dailyChallenge.plague === 'undefined') {
+            mapsClicked(true);
+            return;
+        }
+    }
+}
