@@ -1328,7 +1328,7 @@ function createSetting(id, name, description, type, defaultValue, list, containe
         btn.setAttribute("onclick", 'ImportExportTooltip(\'' + defaultValue + '\', \'update\')');
         btn.setAttribute("onmouseover", 'tooltip(\"' + name + '\", \"customText\", event, \"' + description + '\")');
         btn.setAttribute("onmouseout", 'tooltip("hide")');
-        btn.setAttribute("style", "background-color: #e1ade6; color: black; font-size: 1.1vw;");
+        btn.setAttribute("style", "background-color: #d88839; color: black; font-size: 1.1vw;");
         btn.textContent = name;
         btnParent.appendChild(btn);
         if (container) document.getElementById(container).appendChild(btnParent);
