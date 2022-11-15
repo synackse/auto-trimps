@@ -87,13 +87,6 @@ function useScryerStance() {
         use_scryer |= !game.global.mapsActive && getPageSetting('UseScryerStance') == true && (isActiveSpireAT() || disActiveSpireAT()) && getPageSetting('ScryerUseinSpire2') == 1;
         use_scryer |= !game.global.mapsActive && getPageSetting('UseScryerStance') == true && ((getEmpowerment() == "Poison" && getPageSetting('ScryUseinPoison') > 0 && game.global.world < getPageSetting('ScryUseinPoison')) || (getEmpowerment() == "Wind" && getPageSetting('ScryUseinWind') > 0 && game.global.world < getPageSetting('ScryUseinWind')) || (getEmpowerment() == "Ice" && getPageSetting('ScryUseinIce') > 0 && game.global.world < getPageSetting('ScryUseinIce')));
 
-    //Farm easy maps on scryer
-    if (game.global.mapsActive) {
-        var farmScry = shouldFarm || shouldFarmDamage || !enoughHealth || preSpireFarming;
-        var mapRatio = calcHDRatio(getCurrentMapObject().level, "map") <= (game.unlocks.imps.Titimp ? 4 : 3);
-        use_scryer |= getCurrentMapObject().location != "Void" && farmScry && mapRatio; //Farm maps on scryer
-    }
-
     //check Corrupted Force
     if ((isCorrupt && getPageSetting('ScryerSkipCorrupteds2') == 1 && getPageSetting('UseScryerStance') == true) || (use_scryer)) {
         setFormation(scry);
