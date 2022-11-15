@@ -2389,8 +2389,7 @@ function RselectOther(other) {
 }
 
 function RselectMap(selectedMap) {
-    if (Rshould(true, false)) {
-        if (selectedMap == "world") {
+    if (Rshould(true, false) && selectedMap == "world") {
 
             if (Rshould(false, true) == "frag") {
                 selectedMap = RselectFrag();
@@ -2435,7 +2434,6 @@ function RselectMap(selectedMap) {
                     }
                 }
             }
-        }
     }
     return selectedMap;
 }
