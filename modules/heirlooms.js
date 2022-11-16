@@ -76,6 +76,9 @@ function evaluateHeirloomMods2(loom, location) {
     if (type == "Core") {
       eff += getHeirloomEff(name, "core");
     }
+    if (rarity >= raretokeep) {
+	eff += 1000;
+    }
     if (name == "empty" && type == "Shield") {
         eff *= 4;
     }
