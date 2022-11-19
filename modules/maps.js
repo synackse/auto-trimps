@@ -686,6 +686,7 @@ function autoMap() {
         if (selectedMap == "world") {
             mapsClicked();
         } else if (selectedMap == "create") {
+            if (game.global.selectedMapPreset > 1) selectAdvMapsPreset(1);
             var $mapLevelInput = document.getElementById("mapLevelInput");
             $mapLevelInput.value = needPrestige ? game.global.world : siphlvl;
             if (preSpireFarming && MODULES["maps"].SpireFarm199Maps)
@@ -1419,6 +1420,7 @@ function RautoMap() {
 
         //Everything else
         else if (selectedMap == "create") {
+            if (game.global.selectedMapPreset > 1) selectAdvMapsPreset(1);
             document.getElementById("mapLevelInput").value = game.global.world;
             var decrement;
             var tier;
