@@ -125,6 +125,7 @@ function init() {
   toggleDiv.innerText = ""
   document.querySelector("#graphParent").appendChild(toggleDiv);
 
+
   // Handle Dark Graphs?  Old code
   MODULES.graphs.themeChanged = function () {
     if (game && game.options.menu.darkTheme.enabled != lastTheme) {
@@ -135,9 +136,9 @@ function init() {
         if ("graphSelection" == h.id) return void (2 != game.options.menu.darkTheme.enabled && (h.style.color = "black"));
       }
       toggleDarkGraphs();
-      var c = document.getElementsByTagName("input"),
-        d = document.getElementsByTagName("select"),
-        e = document.getElementById("graphFooterLine1").children;
+      var c = document.getElementsByTagName("input");
+      var d = document.getElementsByTagName("select");
+      var e = document.getElementById("graphFooterLine1").children;
       for (let h of c) f(h);
       for (let h of d) f(h);
       for (let h of e) f(h);
@@ -145,7 +146,9 @@ function init() {
     }
     game && (lastTheme = game.options.menu.darkTheme.enabled);
   }
+
   MODULES.graphs.themeChanged();
+  document.querySelector("#blackCB").checked = GRAPHSETTINGS.darkTheme
 }
 
 // Graph constructor 
@@ -400,6 +403,7 @@ function drawGraph() {
     checkbox.setAttribute("onclick", `GRAPHSETTINGS.toggles.${graph}.${toggle} = this.checked; drawGraph();`);
 
     label.innerText = toggle;
+    label.style.color = "#757575";
 
     container.appendChild(checkbox)
     container.appendChild(label)
@@ -506,23 +510,30 @@ function toggleClearButton() {
 
 function toggleDarkGraphs() {
   function removeDarkGraphs() {
-    var a = document.getElementById("dark-graph.css");
-    a && (document.head.removeChild(a), debug("Removing dark-graph.css file", "graphs"));
+    var darkcss = document.getElementById("dark-graph.css");
+    darkcss && (document.head.removeChild(darkcss), debug("Removing dark-graph.css file", "graphs"));
   }
   function addDarkGraphs() {
-    var a = document.getElementById("dark-graph.css");
-    if (!a) {
+    var darkcss = document.getElementById("dark-graph.css");
+    if (!darkcss) {
       var b = document.createElement("link");
       (b.rel = "stylesheet"), (b.type = "text/css"), (b.id = "dark-graph.css"), (b.href = basepath + "dark-graph.css"), document.head.appendChild(b), debug("Adding dark-graph.css file", "graphs");
     }
   }
   if (game) {
-    var c = document.getElementById("dark-graph.css"),
-      d = document.getElementById("blackCB").checked;
-    (!c && (0 == game.options.menu.darkTheme.enabled || 2 == game.options.menu.darkTheme.enabled)) || MODULES.graphs.useDarkAlways || d
-      ? addDarkGraphs()
-      : c && (1 == game.options.menu.darkTheme.enabled || 3 == game.options.menu.darkTheme.enabled || !d) && removeDarkGraphs();
+    var darkcss = document.getElementById("dark-graph.css")
+    var dark = document.getElementById("blackCB").checked;
+    saveSetting("darkTheme", dark)
+    if ((!darkcss && (0 == game.options.menu.darkTheme.enabled || 2 == game.options.menu.darkTheme.enabled)) || MODULES.graphs.useDarkAlways || dark) {
+      addDarkGraphs()
+    }
+    else {
+      if (darkcss && (1 == game.options.menu.darkTheme.enabled || 3 == game.options.menu.darkTheme.enabled || !dark)) {
+        removeDarkGraphs();
+      }
+    }
   }
+
 }
 // ####### end scary old code
 
@@ -563,7 +574,7 @@ function autoToggleGraph() {
   var a = document.getElementById("autoTrimpsTabBarMenu");
   a && "block" === a.style.display && (a.style.display = "none");
   var b = document.getElementById("graphParent");
-  "block" === b.style.display ? (b.style.display = "none") : ((b.style.display = "block")); // , displayGraph()
+  "block" === b.style.display ? (b.style.display = "none") : ((b.style.display = "block"));
 }
 
 // focus main game
@@ -801,7 +812,8 @@ var GRAPHSETTINGS = {
   u1graphSelection: null,
   u2graphSelection: null,
   rememberSelected: [],
-  toggles: {}
+  toggles: {},
+  darkTheme: true
 }
 var portalSaveData = {}
 
