@@ -443,13 +443,14 @@ function Portal() {
     this.initialScruffy = getGameData.scruffy();
     this.s3 = getGameData.s3();
   }
-  // create an object to collect only the relevant data per zone
-  this.perZoneData = Object.fromEntries(graphList.filter((graph) =>
+  // create an object to collect only the relevant data per zone, without fromEntries because old JS
+  this.perZoneData = {};
+  var perZoneItems = graphList.filter((graph) =>
     (graph.universe == this.universe || !graph.universe) // only save data relevant to the current universe
     && graph.conditional() && graph.dataVar) // and for relevant challenges, with datavars 
-    .map(graph => [graph.dataVar, []]) // create data structure
-    .concat([["currentTime", []]]) // always graph time
-  );
+    .map((graph) => graph.dataVar)
+    .concat(["currentTime"]); // always graph time
+  perZoneItems.forEach((name) => this.perZoneData[name] = []);
   // update per zone data and special totals
   this.update = function () {
     const world = getGameData.world();
