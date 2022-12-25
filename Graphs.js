@@ -613,20 +613,33 @@ function pushData() {
 
 // Hide graphs that have no collected data
 function showHideUnusedGraphs() {
+  let activeUniverses = [];
   for (const graph of graphList) {
-    let style = "none"
-    if (graph.graphType != "line") continue;
+    if (graph.graphType != "line") continue; // ignore column graphs (pure laziness, the only two always exist anyways)
     const universes = graph.universe ? [graph.universe] : [1, 2]
     for (const universe of universes) {
+      let style = "none"
       for (portal of Object.values(portalSaveData)) {
-        if (portal.perZoneData[graph.dataVar] && portal.universe == universe  // has collected data, in the right universe
+        if (portal.perZoneData[graph.dataVar] && portal.universe === universe  // has collected data, in the right universe
           && portal.perZoneData[graph.dataVar].some((z) => { return !(z === 0 || z === null) })) { // and there is nonzero data
           style = ""
+          if (!activeUniverses.includes(universe)) activeUniverses.push(universe);
           break;
         }
       }
+      // hide unused graphs
       document.querySelector(`#u${universe}graphSelection [value="${graph.selectorText}"]`).style.display = style;
     }
+  }
+  // hide universe selector if graphs are only in one universe
+  let universeSel = document.querySelector(`#universeSelection`);
+  if (activeUniverses.length === 1) {
+    universeSel.style.display = "none";
+    GRAPHSETTINGS.universeSelection = activeUniverses[0];
+    swapGraphUniverse()
+  }
+  else {
+    universeSel.style.display = "";
   }
 }
 
