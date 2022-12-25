@@ -106,17 +106,12 @@ function init() {
   document.querySelector("#u1graphSelection").value = GRAPHSETTINGS.u1graphSelection
   document.querySelector("#u2graphSelection").value = GRAPHSETTINGS.u2graphSelection
 
-  let tipsText = `
-    You can zoom by dragging a box around an area. You can turn portals off by clicking them on the legend. 
-    Quickly view the last portal by clicking it off, then Invert Selection. Or by clicking All Off, then clicking the portal on. 
-    To delete a portal, Type its portal number in the box and press Delete Specific. 
-    Using negative numbers in the Delete Specific box will KEEP that many portals (starting counting backwards from the current one), 
-    ie: if you have Portals 1000-1015, typing -10 will keep 1005-1015."
-    `
+  let tipsText = "You can zoom by dragging a box around an area. You can turn portals off by clicking them on the legend. Quickly view the last portal by clicking it off, then Invert Selection. Or by clicking All Off, then clicking the portal on. To delete a portal, Type its portal number in the box and press Delete Specific. Using negative numbers in the Delete Specific box will KEEP that many portals (starting counting backwards from the current one), ie: if you have Portals 1000-1015, typing -10 will keep 1005-1015."
   document.getElementById("graphFooterLine2").innerHTML += `
-    <span style="float: left;" onmouseover=\'tooltip("Tips", "customText", event, "${tipsText}")\' onmouseout=\'tooltip("hide")\'>Tips: Hover for usage tips.</span>
+    <span style="float: left;" onmouseover='tooltip("Tips", "customText", event, "${tipsText}")' onmouseout='tooltip("hide")'>Tips: Hover for usage tips.</span>
     <input onclick="toggleDarkGraphs()" style="height: 20px; float: right; margin-right: 0.5vw;" type="checkbox" id="blackCB">
-    <span style="float: right; margin-right: 0.5vw;">Black Graphs:</span>`;
+    <span style="float: right; margin-right: 0.5vw;">Black Graphs:</span>
+    `;
 
   // Add a header with negative float hanging down on the top of the graph, for toggle buttons
   var toggleDiv = document.createElement("div");
@@ -157,6 +152,7 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
   this.dataVar = dataVar
   this.universe = universe; // false, 1, 2
   this.selectorText = selectorText ? selectorText : dataVar;
+  this.id = selectorText.replaceAll(" ", "_")
   this.graphTitle = this.selectorText;
   this.graphType = "line"
   this.customFunction;
@@ -267,14 +263,14 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
     var maxS3 = Math.max(...Object.values(portalSaveData).map((portal) => portal.s3).filter((s3) => s3));
     if (this.toggles) {
       // create save space for the toggles if they don't exist
-      if (GRAPHSETTINGS.toggles[this.selectorText] === undefined) { GRAPHSETTINGS.toggles[this.selectorText] = {} }
+      if (GRAPHSETTINGS.toggles[this.id] === undefined) { GRAPHSETTINGS.toggles[this.id] = {} }
       this.toggles.forEach((toggle) => {
-        if (GRAPHSETTINGS.toggles[this.selectorText][toggle] === undefined) { GRAPHSETTINGS.toggles[this.selectorText][toggle] = false }
+        if (GRAPHSETTINGS.toggles[this.id][toggle] === undefined) { GRAPHSETTINGS.toggles[this.id][toggle] = false }
       })
       // change the graph title per toggle
-      if (GRAPHSETTINGS.toggles[this.selectorText].perHr) { this.graphTitle += " / Hour" }
-      if (GRAPHSETTINGS.toggles[this.selectorText].lifetime) { this.graphTitle += " % of Lifetime Total" }
-      if (GRAPHSETTINGS.toggles[this.selectorText].s3normalized) { this.graphTitle += `, Normalized to z${maxS3} S3` }
+      if (GRAPHSETTINGS.toggles[this.id].perHr) { this.graphTitle += " / Hour" }
+      if (GRAPHSETTINGS.toggles[this.id].lifetime) { this.graphTitle += " % of Lifetime Total" }
+      if (GRAPHSETTINGS.toggles[this.id].s3normalized) { this.graphTitle += `, Normalized to z${maxS3} S3` }
     }
     // parse data per portal
     for (const portal of Object.values(portalSaveData)) {
@@ -292,7 +288,7 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
         // TOGGLES
         if (this.toggles) {
           // Apply the toggled functions to the data
-          for (const [toggle, bool] of Object.entries(GRAPHSETTINGS.toggles[this.selectorText])) {
+          for (const [toggle, bool] of Object.entries(GRAPHSETTINGS.toggles[this.id])) {
             if (!bool) continue;
             switch (toggle) {
               case "perHr": {
@@ -320,7 +316,7 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
 
         if (this.useAccumulator) x += cleanData.length === 0 ? 0 : cleanData.at(-1); // never used, leaving it in just in case
         if (this.typeCheck && typeof x != this.typeCheck) x = null;
-        cleanData.push([index, x])
+        cleanData.push([Number(index), x]) // highcharts expects number, number, not str, number
       }
       this.graphData.push({
         name: `Portal ${portal.totalPortals}: ${portal.challenge}`,
@@ -421,7 +417,7 @@ function drawGraph() {
     toggleDiv.innerHTML = "";
     if (graph.toggles) {
       for (const toggle of graph.toggles) {
-        toggleDiv.appendChild(makeCheckbox(graph.selectorText, toggle))
+        toggleDiv.appendChild(makeCheckbox(graph.id, toggle))
       }
     }
   }
@@ -441,6 +437,7 @@ function Portal() {
   if (this.universe === 1) {
     this.totalHelium = game.global.totalHeliumEarned;
     this.initialFluffy = getGameData.fluffy();
+    this.initialDE = getGameData.essence();
   }
   if (this.universe === 2) {
     this.totalRadon = game.global.totalRadonEarned;
@@ -688,10 +685,14 @@ const graphList = [
   ["heliumOwned", 1, "Helium", {
     toggles: ["perHr", "lifetime"]
   }],
-  ["fluffy", 1, "Fluffy", {
-    graphTitle: "Fluffy Exp",
+  ["fluffy", 1, "Fluffy Exp", {
     conditional: () => { return getGameData.u1hze() >= 300 && getGameData.fluffy() < 3415819248011889 }, // pre unlock, post E10L10
     customFunction: (portal, i) => { return diff("fluffy", portal.initialFluffy)(portal, i) },
+    toggles: ["perHr"]
+  }],
+  ["essence", 1, "Dark Essence", {
+    conditional: () => { return getGameData.essence() < 5.826e+39 },
+    customFunction: (portal, i) => { return diff("essence", portal.initialDE)(portal, i) },
     toggles: ["perHr"]
   }],
   ["amals", 1, "Amalgamators"],
@@ -703,8 +704,7 @@ const graphList = [
   ["radonOwned", 2, "Radon", {
     toggles: ["perHr", "lifetime", "s3normalized"]
   }],
-  ["scruffy", 2, "Scruffy", {
-    graphTitle: "Scruffy Exp",
+  ["scruffy", 2, "Scruffy Exp", {
     customFunction: (portal, i) => { return diff("scruffy", portal.initialScruffy)(portal, i) },
     toggles: ["perHr"]
   }],
