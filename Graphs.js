@@ -477,9 +477,11 @@ function clearData(keepN, clrall = false) {
       }
     }
   } else {
+    let totalSaved = Object.keys(portalSaveData).length;
     for (const [portalID, portalData] of Object.entries(portalSaveData)) {
-      if (portalData.totalPortals < currentPortalNumber - keepN) {
+      if (totalSaved > keepN && portalData.totalPortals <= currentPortalNumber - keepN) {
         delete portalSaveData[portalID];
+        totalSaved--;
       }
     }
   }
@@ -489,13 +491,12 @@ function clearData(keepN, clrall = false) {
 
 function deleteSpecific() {
   let portalNum = Number(document.getElementById("deleteSpecificTextBox").value);
-  if (portalNum > 0)
-    if (0 > parseInt(portalNum)) clearData(Math.abs(portalNum));
-    else {
-      for (const [portalID, portalData] of Object.entries(portalSaveData)) {
-        if (portalData.totalPortals === portalNum) delete portalSaveData[portalID];
-      }
+  if (parseInt(portalNum) < 0) { clearData(Math.abs(portalNum)); }
+  else {
+    for (const [portalID, portalData] of Object.entries(portalSaveData)) {
+      if (portalData.totalPortals === portalNum) delete portalSaveData[portalID];
     }
+  }
   savePortalData(true)
   showHideUnusedGraphs();
 }
@@ -708,6 +709,10 @@ const graphList = [
     customFunction: (portal, i) => { return diff("essence", portal.initialDE)(portal, i) },
     toggles: ["perHr"]
   }],
+  ["lastWarp", 1, "Warpstations", {
+    graphTitle: "Warpstations built on previous Giga",
+    conditional: () => { return getGameData.u1hze() > 60 && ((game.global.totalHeliumEarned - game.global.heliumLeftover) < 10 ** 10) }, // Warp unlock, less than 10B He allocated
+  }],
   ["amals", 1, "Amalgamators"],
   ["wonders", 1, "Wonders", {
     conditional: () => { return getGameData.challengeActive() === "Experience" }
@@ -794,7 +799,7 @@ const getGameData = {
   zoneTime: () => { return new Date().getTime() - game.global.zoneStarted },
   mapbonus: () => { return game.global.mapBonus },
   empower: () => { return game.global.challengeActive == "Daily" && typeof game.global.dailyChallenge.empower !== "undefined" ? game.global.dailyChallenge.empower.stacks : 0 },
-  lastwarp: () => { return game.global.lastWarp },
+  lastWarp: () => { return game.global.lastWarp },
   essence: () => { return game.global.spentEssence + game.global.essence },
   heliumOwned: () => { return game.resources.helium.owned },
   magmite: () => { return game.global.magmite },
