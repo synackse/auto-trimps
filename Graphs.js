@@ -152,7 +152,7 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
   this.dataVar = dataVar
   this.universe = universe; // false, 1, 2
   this.selectorText = selectorText ? selectorText : dataVar;
-  this.id = selectorText.replaceAll(" ", "_")
+  this.id = selectorText.replace(/ /g, "_")
   this.graphTitle = this.selectorText;
   this.graphType = "line"
   this.customFunction;
