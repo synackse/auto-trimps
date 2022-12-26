@@ -546,7 +546,7 @@ function saveSelectedGraphs() {
 }
 function applyRememberedSelections() {
   for (let i = 0; i < chart1.series.length; i++) {
-    if (!GRAPHSETTINGS.rememberSelected[i]) { chart1.series[i].hide(); }
+    if (GRAPHSETTINGS.rememberSelected[i] === false) { chart1.series[i].hide(); }
   }
 }
 function toggleSpecificGraphs() {
@@ -608,7 +608,7 @@ function pushData() {
     portalSaveData[portalID] = new Portal();
   }
   portalSaveData[portalID].update();
-  clearData(50); // Safety value, probably too high
+  clearData(GRAPHSETTINGS.maxGraphs);
   savePortalData(false) // save current portal
 }
 
@@ -831,7 +831,8 @@ var GRAPHSETTINGS = {
   u2graphSelection: null,
   rememberSelected: [],
   toggles: {},
-  darkTheme: true
+  darkTheme: true,
+  maxGraphs: 20, // Highcharts gets a bit angry rendering more graphs, also 30 is the maximum you can fit on the legend before it splits into pages.  
 }
 var portalSaveData = {}
 
