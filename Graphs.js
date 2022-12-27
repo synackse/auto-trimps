@@ -790,7 +790,7 @@ const getGameData = {
   nullifium: () => { return recycleAllExtraHeirlooms(true) },
   coord: () => { return game.upgrades.Coordination.allowed - game.upgrades.Coordination.done },
   overkill: () => {
-    // overly complex check for Liq, overly fragile check for overkill cells
+    // overly complex check for Liq, overly fragile check for overkill cells. please rewrite this at some point.
     if (game.options.menu.overkillColor.enabled == 0) toggleSetting("overkillColor");
     if (game.options.menu.liquification.enabled && game.talents.liquification.purchased && !game.global.mapsActive && game.global.gridArray && game.global.gridArray[0] && game.global.gridArray[0].name == "Liquimp")
       return 100;
@@ -804,7 +804,14 @@ const getGameData = {
   heliumOwned: () => { return game.resources.helium.owned },
   magmite: () => { return game.global.magmite },
   magmamancers: () => { return game.jobs.Magmamancer.owned },
-  fluffy: () => { return game.global.fluffyExp },
+  fluffy: () => {
+    //sum of all previous evo costs + current exp
+    let exp = game.global.fluffyExp;
+    for (var evo = 0; evo < Fluffy.getCurrentPrestige(); evo++) {
+      exp += 111848 * 5 ** (evo + 5);
+    }
+    return exp
+  },
   nursery: () => { return game.buildings.Nursery.purchased },
   amals: () => { return game.jobs.Amalgamator.owned },
   wonders: () => { return game.challenges.Experience.wonders },
