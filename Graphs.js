@@ -292,7 +292,7 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
             if (!bool) continue;
             switch (toggle) {
               case "perHr": {
-                x = x / ((time - portal.portalTime) / 3600000)
+                x = x / (time / 3600000)
                 break;
               }
               case "lifetime": {
@@ -314,7 +314,7 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
           }
         }
 
-        if (this.useAccumulator) x += cleanData.length === 0 ? 0 : cleanData.at(-1); // never used, leaving it in just in case
+        if (this.useAccumulator) x += cleanData.at(-1) !== undefined ? cleanData.at(-1)[1] : 0; // never used, leaving it in just in case
         if (this.typeCheck && typeof x != this.typeCheck) x = null;
         cleanData.push([Number(index), x]) // highcharts expects number, number, not str, number
       }
@@ -428,7 +428,6 @@ function drawGraph() {
 function Portal() {
   this.universe = getGameData.universe();
   this.totalPortals = getTotalPortals();
-  this.portalTime = getGameData.portalTime();
   this.challenge = getGameData.challengeActive() === 'Daily'
     ? getCurrentChallengePane().split('.')[0].substr(13).slice(0, 16) // names dailies by their start date, only moderately cursed
     : getGameData.challengeActive();
@@ -765,15 +764,13 @@ const graphList = [
         || getGameData.universe() == 2 && getGameData.u2hze() >= 201)
     }
   }],
-  ["currentTime", false, "Clear Time", {
-    customFunction: (portal, i) => { return Math.round(diff("currentTime")(portal, i) / 100) * 100 },
+  ["zoneTime", false, "Clear Time", {
     yType: "datetime",
     formatter: formatters.datetime
   }],
   ["currentTime", false, "Cumulative Clear Time", {
-    customFunction: (portal, i) => { return Math.round(diff("currentTime", portal.portalTime)(portal, i)) },
     yType: "datetime",
-    formatter: formatters.datetime
+    formatter: formatters.datetime,
   }],
   ["mapbonus", false, "Map Bonus"],
   ["empower", false, "Empower", {
@@ -782,7 +779,7 @@ const graphList = [
 ].map(opts => new Graph(...opts));
 
 const getGameData = {
-  currentTime: () => { return new Date().getTime() },
+  currentTime: () => { return getGameTime() - game.global.portalTime }, // portalTime changes on pause, 'when a portal started' is not a static concept
   world: () => { return game.global.world },
   challengeActive: () => { return game.global.challengeActive },
   voids: () => { return game.global.totalVoidMaps },
@@ -796,14 +793,14 @@ const getGameData = {
       return 100;
     else return document.getElementById("grid").getElementsByClassName("cellColorOverkill").length;
   },
-  zoneTime: () => { return new Date().getTime() - game.global.zoneStarted },
+  zoneTime: () => { return Math.round((getGameTime() - game.global.zoneStarted) * 100) / 100 }, // rounded to x.xs
   mapbonus: () => { return game.global.mapBonus },
   empower: () => { return game.global.challengeActive == "Daily" && typeof game.global.dailyChallenge.empower !== "undefined" ? game.global.dailyChallenge.empower.stacks : 0 },
   lastWarp: () => { return game.global.lastWarp },
   essence: () => { return game.global.spentEssence + game.global.essence },
   heliumOwned: () => { return game.resources.helium.owned },
-  magmite: () => { return game.global.magmite },
-  magmamancers: () => { return game.jobs.Magmamancer.owned },
+  //magmite: () => { return game.global.magmite },
+  //magmamancers: () => { return game.jobs.Magmamancer.owned },
   fluffy: () => {
     //sum of all previous evo costs + current exp
     let exp = game.global.fluffyExp;
@@ -812,7 +809,7 @@ const getGameData = {
     }
     return exp
   },
-  nursery: () => { return game.buildings.Nursery.purchased },
+  //nursery: () => { return game.buildings.Nursery.purchased },
   amals: () => { return game.jobs.Amalgamator.owned },
   wonders: () => { return game.challenges.Experience.wonders },
   scruffy: () => { return game.global.fluffyExp2 },
@@ -823,7 +820,6 @@ const getGameData = {
   embers: () => { return game.challenges.Hypothermia.embers },
   cruffys: () => { return game.challenges.Nurture.level },
   universe: () => { return game.global.universe },
-  portalTime: () => { return game.global.portalTime },
   s3: () => { return game.global.lastRadonPortal },
   u1hze: () => { return game.global.highestLevelCleared },
   u2hze: () => { return game.global.highestRadonLevelCleared },
