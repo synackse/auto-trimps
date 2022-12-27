@@ -261,16 +261,19 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
     this.graphData = [];
     this.graphTitle = this.baseGraphTitle;
     var maxS3 = Math.max(...Object.values(portalSaveData).map((portal) => portal.s3).filter((s3) => s3));
+    var activeToggles = [];
     if (this.toggles) {
+      activeToggles = this.toggles.filter(toggle => GRAPHSETTINGS.toggles[this.id][toggle])
       // create save space for the toggles if they don't exist
       if (GRAPHSETTINGS.toggles[this.id] === undefined) { GRAPHSETTINGS.toggles[this.id] = {} }
       this.toggles.forEach((toggle) => {
         if (GRAPHSETTINGS.toggles[this.id][toggle] === undefined) { GRAPHSETTINGS.toggles[this.id][toggle] = false }
       })
       // change the graph title per toggle
-      if (GRAPHSETTINGS.toggles[this.id].perHr) { this.graphTitle += " / Hour" }
-      if (GRAPHSETTINGS.toggles[this.id].lifetime) { this.graphTitle += " % of Lifetime Total" }
-      if (GRAPHSETTINGS.toggles[this.id].s3normalized) { this.graphTitle += `, Normalized to z${maxS3} S3` }
+      if (activeToggles.includes("perHr")) { this.graphTitle += " / Hour" }
+      if (activeToggles.includes("perZone")) { this.graphTitle += " / Zone" }
+      if (activeToggles.includes("lifetime")) { this.graphTitle += " % of Lifetime Total" }
+      if (activeToggles.includes("s3normalized")) { this.graphTitle += `, Normalized to z${maxS3} S3` }
     }
     // parse data per portal
     for (const portal of Object.values(portalSaveData)) {
@@ -286,37 +289,35 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
           if (x < 0) x = null;
         }
         // TOGGLES
-        if (this.toggles) {
-          // Apply the toggled functions to the data
-          for (const [toggle, bool] of Object.entries(GRAPHSETTINGS.toggles[this.id])) {
-            if (!bool) continue;
-            switch (toggle) {
-              case "perHr": {
-                x = x / (time / 3600000)
-                break;
-              }
-              case "lifetime": {
-                let initial;
-                if (item == "heliumOwned") initial = portal.totalHelium;
-                if (item == "radonOwned") initial = portal.totalRadon;
-                if (!initial) {
-                  debug("Attempted to calc lifetime percent of an unknown type:" + item);
-                  continue;
-                }
-                x = x / initial
-                break
-              }
-              case "s3normalized": {
-                x = x / 1.03 ** portal.s3 * 1.03 ** maxS3
-                break;
-              }
-            }
+        // Apply the toggled functions to the data
+        if (activeToggles.includes("perZone")) {
+          time = portal.perZoneData.zoneTime[index]
+          if (index > 1) {
+            x = portal.perZoneData[item][index] - portal.perZoneData[item][index - 1]
           }
         }
-
+        if (activeToggles.includes("perHr")) {
+          x = x / (time / 3600000)
+        }
+        if (activeToggles.includes("lifetime")) {
+          let initial;
+          if (item == "heliumOwned") initial = portal.totalHelium;
+          if (item == "radonOwned") initial = portal.totalRadon;
+          if (!initial) {
+            debug("Attempted to calc lifetime percent of an unknown type:" + item);
+            continue;
+          }
+          x = x / initial
+        }
+        if (activeToggles.includes("s3normalized")) {
+          x = x / 1.03 ** portal.s3 * 1.03 ** maxS3
+        }
         if (this.useAccumulator) x += cleanData.at(-1) !== undefined ? cleanData.at(-1)[1] : 0; // never used, leaving it in just in case
         if (this.typeCheck && typeof x != this.typeCheck) x = null;
         cleanData.push([Number(index), x]) // highcharts expects number, number, not str, number
+      }
+      if (activeToggles.includes("perZone")) {
+        cleanData.splice(cleanData.length - 1); // current zone is too erratic to include due to weird order of granting resources in Trimps
       }
       this.graphData.push({
         name: `Portal ${portal.totalPortals}: ${portal.challenge}`,
@@ -699,17 +700,17 @@ const formatters = {
 const graphList = [
   // U1 Graphs
   ["heliumOwned", 1, "Helium", {
-    toggles: ["perHr", "lifetime"]
+    toggles: ["perHr", "perZone", "lifetime"]
   }],
   ["fluffy", 1, "Fluffy Exp", {
     conditional: () => { return getGameData.u1hze() >= 300 && getGameData.fluffy() < 3415819248011889 }, // pre unlock, post E10L10
     customFunction: (portal, i) => { return diff("fluffy", portal.initialFluffy)(portal, i) },
-    toggles: ["perHr"]
+    toggles: ["perHr", "perZone",]
   }],
   ["essence", 1, "Dark Essence", {
     conditional: () => { return getGameData.essence() < 5.826e+39 },
     customFunction: (portal, i) => { return diff("essence", portal.initialDE)(portal, i) },
-    toggles: ["perHr"]
+    toggles: ["perHr", "perZone",]
   }],
   ["lastWarp", 1, "Warpstations", {
     graphTitle: "Warpstations built on previous Giga",
@@ -722,11 +723,11 @@ const graphList = [
 
   // U2 Graphs
   ["radonOwned", 2, "Radon", {
-    toggles: ["perHr", "lifetime", "s3normalized"]
+    toggles: ["perHr", "perZone", "lifetime", "s3normalized"]
   }],
   ["scruffy", 2, "Scruffy Exp", {
     customFunction: (portal, i) => { return diff("scruffy", portal.initialScruffy)(portal, i) },
-    toggles: ["perHr"]
+    toggles: ["perHr", "perZone",]
   }],
   ["worshippers", 2, "Worshippers", {
     conditional: () => { return getGameData.u2hze() >= 50 }
