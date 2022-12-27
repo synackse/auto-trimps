@@ -544,6 +544,9 @@ function saveSelectedGraphs() {
   saveSetting();
 }
 function applyRememberedSelections() {
+  if (chart1.series.length < GRAPHSETTINGS.rememberSelected.length) {
+    GRAPHSETTINGS.rememberSelected.splice(chart1.series.length); // cleanup after portal deletion
+  }
   for (let i = 0; i < chart1.series.length; i++) {
     if (GRAPHSETTINGS.rememberSelected[i] === false) { chart1.series[i].hide(); }
   }
