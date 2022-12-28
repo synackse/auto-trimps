@@ -260,19 +260,20 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
     var item = this.dataVar;
     this.graphData = [];
     this.graphTitle = this.baseGraphTitle;
+    this.yTitle = this.selectorText;
     var maxS3 = Math.max(...Object.values(portalSaveData).map((portal) => portal.s3).filter((s3) => s3));
     var activeToggles = [];
     if (this.toggles) {
-      activeToggles = this.toggles.filter(toggle => GRAPHSETTINGS.toggles[this.id][toggle])
       // create save space for the toggles if they don't exist
       if (GRAPHSETTINGS.toggles[this.id] === undefined) { GRAPHSETTINGS.toggles[this.id] = {} }
       this.toggles.forEach((toggle) => {
         if (GRAPHSETTINGS.toggles[this.id][toggle] === undefined) { GRAPHSETTINGS.toggles[this.id][toggle] = false }
       })
+      activeToggles = this.toggles.filter(toggle => GRAPHSETTINGS.toggles[this.id][toggle])
       // change the graph title per toggle
+      if (activeToggles.includes("perZone")) { this.graphTitle += " this Zone" }
       if (activeToggles.includes("perHr")) { this.graphTitle += " / Hour" }
-      if (activeToggles.includes("perZone")) { this.graphTitle += " / Zone" }
-      if (activeToggles.includes("lifetime")) { this.graphTitle += " % of Lifetime Total" }
+      if (activeToggles.includes("lifetime")) { this.graphTitle += " % of Lifetime Total"; this.yTitle += " % of lifetime" }
       if (activeToggles.includes("s3normalized")) { this.graphTitle += `, Normalized to z${maxS3} S3` }
     }
     // parse data per portal
@@ -289,26 +290,37 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
           if (x < 0) x = null;
         }
         // TOGGLES
-        // Apply the toggled functions to the data
+        // Apply the toggled functions to the data. Order matters.
         if (activeToggles.includes("perZone")) {
           time = portal.perZoneData.zoneTime[index]
           if (index > 1) {
             x = portal.perZoneData[item][index] - portal.perZoneData[item][index - 1]
           }
         }
-        if (activeToggles.includes("perHr")) {
-          x = x / (time / 3600000)
-        }
         if (activeToggles.includes("lifetime")) {
           let initial;
-          if (item == "heliumOwned") initial = portal.totalHelium;
-          if (item == "radonOwned") initial = portal.totalRadon;
+          if (item === "heliumOwned") { initial = portal.totalHelium; }
+          if (item === "radonOwned") { initial = portal.totalRadon; }
+          if (item === "c23increase") { initial = portal.cinf; }
           if (!initial) {
             debug("Attempted to calc lifetime percent of an unknown type:" + item);
             continue;
           }
-          x = x / initial
+          if (item === "c23increase") {
+            let totalBonus = (1 + (initial[1] / 100)) * initial[0]; // calc initial cinf            
+            let c2 = initial[0];
+            let c3 = initial[1];
+            portal.universe == 1 ? c2 += x : c3 += x;
+            let newBonus = (1 + (c3 / 100)) * c2; // calc final cinf
+            x = ((newBonus - totalBonus) / (totalBonus ? totalBonus : 1));
+          }
+          else { x = x / (initial ? initial : 1) }
+
         }
+        if (activeToggles.includes("perHr")) {
+          x = x / (time / 3600000)
+        }
+
         if (activeToggles.includes("s3normalized")) {
           x = x / 1.03 ** portal.s3 * 1.03 ** maxS3
         }
@@ -434,6 +446,7 @@ function Portal() {
     : getGameData.challengeActive();
   this.totalNullifium = getGameData.nullifium();
   this.totalVoidMaps = getGameData.totalVoids();
+  this.cinf = getGameData.cinf();
   if (this.universe === 1) {
     this.totalHelium = game.global.totalHeliumEarned;
     this.initialFluffy = getGameData.fluffy();
@@ -566,16 +579,27 @@ function toggleAllGraphs() {
   }
 }
 
-// MORE SCARY OLD CODE
 // show graph window
 function autoToggleGraph() {
-  game.options.displayed && toggleSettingsMenu();
-  var a = document.getElementById("autoSettings");
-  a && "block" === a.style.display && (a.style.display = "none");
-  var a = document.getElementById("autoTrimpsTabBarMenu");
-  a && "block" === a.style.display && (a.style.display = "none");
-  var b = document.getElementById("graphParent");
-  "block" === b.style.display ? (b.style.display = "none") : ((b.style.display = "block"));
+  if (game.options.displayed) {
+    toggleSettingsMenu();
+  }
+  var autoSettings = document.getElementById("autoSettings");
+  if (autoSettings && autoSettings.style.display === "block") {
+    autoSettings.style.display = "none";
+  }
+  var ATMenu = document.getElementById("autoTrimpsTabBarMenu");
+  if (ATMenu && ATMenu.style.display === "block") {
+    ATMenu.style.display = "none";
+  }
+  var graphParent = document.getElementById("graphParent");
+  if ("block" === graphParent.style.display) {
+    graphParent.style.display = "none";
+  }
+  else {
+    graphParent.style.display = "block";
+    document.getElementById("deleteSpecificTextBox").focus()
+  }
 }
 
 // focus main game
@@ -595,11 +619,12 @@ document.addEventListener(
   function (a) {
     1 != game.options.menu.hotkeys.enabled || game.global.preMapsActive || game.global.lockTooltip
       || ctrlPressed || heirloomsShown || 27 != a.keyCode || escapeATWindows();
+    if (["1", "2", "3", "4", "5"].includes(a.key)) {
+      //a.stopPropagation() // does not work, whee
+    }
   },
   true
 );
-
-// ####### end scary old code
 
 function getportalID() { return `u${getGameData.universe()} p${getTotalPortals()}` }
 
@@ -625,7 +650,7 @@ function showHideUnusedGraphs() {
       let style = "none"
       for (portal of Object.values(portalSaveData)) {
         if (portal.perZoneData[graph.dataVar] && portal.universe === universe  // has collected data, in the right universe
-          && portal.perZoneData[graph.dataVar].some((z) => { return !(z === 0 || z === null) })) { // and there is nonzero data
+          && new Set(portal.perZoneData[graph.dataVar].filter(x => x)).size > 1) { // and there is nonzero, variable data
           style = ""
           if (!activeUniverses.includes(universe)) activeUniverses.push(universe);
           break;
@@ -745,6 +770,10 @@ const graphList = [
   }],
 
   // Generic Graphs
+  ["c23increase", false, "C2 Bonus", {
+    conditional: () => { return game.global.runningChallengeSquared },
+    toggles: ["perHr", "perZone", "lifetime"]
+  }],
   ["voids", false, "Void Map History", {
     graphTitle: "Void Map History (voids finished during the same level acquired are not counted/tracked)",
     yTitle: "Number of Void Maps",
@@ -827,6 +856,8 @@ const getGameData = {
   s3: () => { return game.global.lastRadonPortal },
   u1hze: () => { return game.global.highestLevelCleared },
   u2hze: () => { return game.global.highestRadonLevelCleared },
+  c23increase: () => { return Math.max(0, getIndividualSquaredReward(game.global.challengeActive, game.global.world) - getIndividualSquaredReward(game.global.challengeActive)) },
+  cinf: () => { return countChallengeSquaredReward(false, false, true) },
 }
 
 // Global vars
