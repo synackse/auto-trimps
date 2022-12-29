@@ -449,12 +449,12 @@ function Portal() {
   this.cinf = getGameData.cinf();
   if (this.universe === 1) {
     this.totalHelium = game.global.totalHeliumEarned;
-    this.initialFluffy = getGameData.fluffy();
+    this.initialFluffy = getGameData.fluffy() - game.stats.bestFluffyExp.value; // adjust for mid-run graph start
     this.initialDE = getGameData.essence();
   }
   if (this.universe === 2) {
     this.totalRadon = game.global.totalRadonEarned;
-    this.initialScruffy = getGameData.scruffy();
+    this.initialScruffy = getGameData.scruffy() - game.stats.bestFluffyExp2.value; // adjust for mid-run graph start
     this.s3 = getGameData.s3();
   }
   // create an object to collect only the relevant data per zone, without fromEntries because old JS
