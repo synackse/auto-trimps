@@ -728,7 +728,7 @@ const graphList = [
     toggles: ["perHr", "perZone", "lifetime"]
   }],
   ["fluffy", 1, "Fluffy Exp", {
-    conditional: () => { return getGameData.u1hze() >= 300 && getGameData.fluffy() < 3415819248011889 }, // pre unlock, post E10L10
+    conditional: () => { return getGameData.u1hze() >= 300 && getGameData.fluffy() < 3413330078125000 }, // pre unlock, post E10L10
     customFunction: (portal, i) => { return diff("fluffy", portal.initialFluffy)(portal, i) },
     toggles: ["perHr", "perZone",]
   }],
@@ -838,7 +838,7 @@ const getGameData = {
     //sum of all previous evo costs + current exp
     let exp = game.global.fluffyExp;
     for (var evo = 0; evo < Fluffy.getCurrentPrestige(); evo++) {
-      exp += 111848 * 5 ** (evo + 5);
+      exp += Math.floor((1000 * Math.pow(5, evo)) * ((Math.pow(4, 10) - 1) / (4 - 1)));;
     }
     return exp
   },
