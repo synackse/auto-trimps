@@ -856,7 +856,12 @@ const getGameData = {
   s3: () => { return game.global.lastRadonPortal },
   u1hze: () => { return game.global.highestLevelCleared },
   u2hze: () => { return game.global.highestRadonLevelCleared },
-  c23increase: () => { return Math.max(0, getIndividualSquaredReward(game.global.challengeActive, game.global.world) - getIndividualSquaredReward(game.global.challengeActive)) },
+  c23increase: () => {
+    if (game.global.challengeActive !== "" && game.global.runningChallengeSquared) {
+      return Math.max(0, getIndividualSquaredReward(game.global.challengeActive, game.global.world) - getIndividualSquaredReward(game.global.challengeActive));
+    }
+    else { return 0; }
+  },
   cinf: () => { return countChallengeSquaredReward(false, false, true) },
 }
 
