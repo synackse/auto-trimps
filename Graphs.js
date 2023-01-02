@@ -178,6 +178,7 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
       chart: {
         renderTo: "graph",
         zoomType: "xy",
+        animation: false,
         resetZoomButton: {
           position: {
             align: "right",
@@ -292,10 +293,16 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
         // TOGGLES
         // Apply the toggled functions to the data. Order matters.
         if (activeToggles.includes("perZone")) {
-          time = portal.perZoneData.zoneTime[index]
-          if (index > 1) {
+
+          if (portal.perZoneData[item][index - 1] && portal.perZoneData[item][index]) { // check for missing data, or start of data
             x = portal.perZoneData[item][index] - portal.perZoneData[item][index - 1]
+            time = portal.perZoneData.currentTime[index] - portal.perZoneData.currentTime[index - 1]
           }
+          else {
+            x = null
+            time = null
+          }
+          //else { x = 0 }
         }
         if (activeToggles.includes("lifetime")) {
           let initial;
@@ -318,7 +325,7 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
 
         }
         if (activeToggles.includes("perHr")) {
-          x = x / (time / 3600000)
+          if (x) { x = x / (time / 3600000) }
         }
 
         if (activeToggles.includes("s3normalized")) {
@@ -328,7 +335,7 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
         if (this.typeCheck && typeof x != this.typeCheck) x = null;
         cleanData.push([Number(index), x]) // highcharts expects number, number, not str, number
       }
-      if (activeToggles.includes("perZone")) {
+      if (activeToggles.includes("perZone") && ["fluffy", "scruffy"].includes(item)) {
         cleanData.splice(cleanData.length - 1); // current zone is too erratic to include due to weird order of granting resources in Trimps
       }
       this.graphData.push({
@@ -558,8 +565,8 @@ function saveSelectedGraphs() {
   saveSetting();
 }
 function applyRememberedSelections() {
-  if (chart1.series.length < GRAPHSETTINGS.rememberSelected.length) {
-    GRAPHSETTINGS.rememberSelected.splice(chart1.series.length); // cleanup after portal deletion
+  if (chart1.series.length !== GRAPHSETTINGS.rememberSelected.length) {
+    GRAPHSETTINGS.rememberSelected = [] // if the graphlist changes, order is no longer guaranteed
   }
   for (let i = 0; i < chart1.series.length; i++) {
     if (GRAPHSETTINGS.rememberSelected[i] === false) { chart1.series[i].hide(); }
@@ -723,6 +730,11 @@ const formatters = {
 // To make a new toggle, add the switch case and title mod to Graph.lineGraph
 
 const graphList = [
+  ["currentTime", false, "Clear Time", {
+    yType: "datetime",
+    formatter: formatters.datetime,
+    toggles: ["perZone"],
+  }],
   // U1 Graphs
   ["heliumOwned", 1, "Helium", {
     toggles: ["perHr", "perZone", "lifetime"]
@@ -796,14 +808,6 @@ const graphList = [
       return ((getGameData.universe() == 1 && getGameData.u1hze() >= 170)
         || getGameData.universe() == 2 && getGameData.u2hze() >= 201)
     }
-  }],
-  ["zoneTime", false, "Clear Time", {
-    yType: "datetime",
-    formatter: formatters.datetime
-  }],
-  ["currentTime", false, "Cumulative Clear Time", {
-    yType: "datetime",
-    formatter: formatters.datetime,
   }],
   ["mapbonus", false, "Map Bonus"],
   ["empower", false, "Empower", {
