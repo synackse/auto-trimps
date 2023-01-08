@@ -262,20 +262,21 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
     this.graphData = [];
     this.graphTitle = this.baseGraphTitle;
     this.yTitle = this.selectorText;
+    if (item === "currentTime") { // TODO This is the ugliest way to handle this, but it's a one off, shoot me.  Resets this graph to defaults.
+      this.yType = "datetime"
+      this.formatter = formatters.datetime;
+      this.useAccumulator = false;
+    }
     var maxS3 = Math.max(...Object.values(portalSaveData).map((portal) => portal.s3).filter((s3) => s3));
     var activeToggles = [];
     if (this.toggles) {
-      // create save space for the toggles if they don't exist
+      // create save space for the toggles if they don't exist (TODO should this really go here?)
       if (GRAPHSETTINGS.toggles[this.id] === undefined) { GRAPHSETTINGS.toggles[this.id] = {} }
       this.toggles.forEach((toggle) => {
         if (GRAPHSETTINGS.toggles[this.id][toggle] === undefined) { GRAPHSETTINGS.toggles[this.id][toggle] = false }
       })
-      activeToggles = this.toggles.filter(toggle => GRAPHSETTINGS.toggles[this.id][toggle])
-      // change the graph title per toggle
-      if (activeToggles.includes("perZone")) { this.graphTitle += " this Zone" }
-      if (activeToggles.includes("perHr")) { this.graphTitle += " / Hour" }
-      if (activeToggles.includes("lifetime")) { this.graphTitle += " % of Lifetime Total"; this.yTitle += " % of lifetime" }
-      if (activeToggles.includes("s3normalized")) { this.graphTitle += `, Normalized to z${maxS3} S3` }
+      activeToggles = Object.keys(toggleProperties).filter(toggle => GRAPHSETTINGS.toggles[this.id][toggle])
+      activeToggles.forEach(toggle => toggleProperties[toggle].graphMods(this));
     }
     // parse data per portal
     for (const portal of Object.values(portalSaveData)) {
@@ -292,8 +293,8 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
         }
         // TOGGLES
         // Apply the toggled functions to the data. Order matters.
-        if (activeToggles.includes("perZone")) {
-
+        if (activeToggles.includes("perZone")) {  // must be first in these checks
+          this.useAccumulator = false; // TODO this might be incredibly stupid, find out later when you use this option for a different case!
           if (portal.perZoneData[item][index - 1] && portal.perZoneData[item][index]) { // check for missing data, or start of data
             x = portal.perZoneData[item][index] - portal.perZoneData[item][index - 1]
             time = portal.perZoneData.currentTime[index] - portal.perZoneData.currentTime[index - 1]
@@ -302,7 +303,6 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
             x = null
             time = null
           }
-          //else { x = 0 }
         }
         if (activeToggles.includes("lifetime")) {
           let initial;
@@ -322,16 +322,26 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
             x = ((newBonus - totalBonus) / (totalBonus ? totalBonus : 1));
           }
           else { x = x / (initial ? initial : 1) }
-
         }
         if (activeToggles.includes("perHr")) {
           if (x) { x = x / (time / 3600000) }
         }
-
-        if (activeToggles.includes("s3normalized")) {
+        if (activeToggles.includes("s3normalized")) { // special case for radon
           x = x / 1.03 ** portal.s3 * 1.03 ** maxS3
         }
-        if (this.useAccumulator) x += cleanData.at(-1) !== undefined ? cleanData.at(-1)[1] : 0; // never used, leaving it in just in case
+        if (activeToggles.includes("mapCount")) { // special case for maps
+          try { x = portal.perZoneData.mapCount[index] || 0; }
+          catch { x = 0 }
+        }
+        if (activeToggles.includes("mapPct")) {
+          try { x = portal.perZoneData.timeOnMap[index] / x || 0; }
+          catch { x = 0 }
+        }
+        if (activeToggles.includes("mapTime")) {
+          try { x = portal.perZoneData.timeOnMap[index] || 0; }
+          catch { x = 0 }
+        }
+        if (this.useAccumulator) x += cleanData.at(-1) !== undefined ? cleanData.at(-1)[1] : 0;
         if (this.typeCheck && typeof x != this.typeCheck) x = null;
         cleanData.push([Number(index), x]) // highcharts expects number, number, not str, number
       }
@@ -415,8 +425,13 @@ function drawGraph() {
     checkbox.id = toggle;
     // initialize the checkbox to saved value
     checkbox.checked = GRAPHSETTINGS.toggles[graph][toggle];
-    // set saved value on change, and update the graph
-    checkbox.setAttribute("onclick", `GRAPHSETTINGS.toggles.${graph}.${toggle} = this.checked; drawGraph();`);
+    // create a godawful inline function to set saved value on change, apply exclusions, and update the graph
+    let funcString = "";
+    if (toggleProperties[toggle] && toggleProperties[toggle].exclude) {
+      toggleProperties[toggle].exclude.forEach(exTog => funcString += `GRAPHSETTINGS.toggles.${graph}.${exTog} = false; `)
+    }
+    funcString += `GRAPHSETTINGS.toggles.${graph}.${toggle} = this.checked; drawGraph();`
+    checkbox.setAttribute("onclick", funcString);
 
     label.innerText = toggle;
     label.style.color = "#757575";
@@ -470,20 +485,30 @@ function Portal() {
     (graph.universe == this.universe || !graph.universe) // only save data relevant to the current universe
     && graph.conditional() && graph.dataVar) // and for relevant challenges, with datavars 
     .map((graph) => graph.dataVar)
-    .concat(["currentTime"]); // always graph time
+    .concat(["currentTime", "mapCount", "timeOnMap"]); // always graph time vars
   perZoneItems.forEach((name) => this.perZoneData[name] = []);
+
   // update per zone data and special totals
-  this.update = function () {
+  this.update = function (fromMap) { // check source of the update
     const world = getGameData.world();
     // TODO Nu is a rather fragile stat, assumes recycling everything on portal. Max throughout the run makes it slightly less crappy.
     // It would be better to store an initial value, and compare to final value + recycle value
     this.totalNullifium = Math.max(this.totalNullifium, getGameData.nullifium());
     this.totalVoidMaps = getGameData.totalVoids();
     for (const [name, data] of Object.entries(this.perZoneData)) {
-      data[world] = getGameData[name]();
       if (world + 1 < data.length) { // FENCEPOSTING
         data.splice(world + 1) // trim 'future' zones on reload
       }
+      if (name === "timeOnMap") {
+        let timeOnMap = getGameData.timeOnMap();
+        if (fromMap) { data[world] = data[world] + timeOnMap || timeOnMap; }// additive per map within a zone
+        continue;
+      }
+      if (name === "mapCount") {
+        if (fromMap && game.global.mapsActive) { data[world] = data[world] + 1 || 1; } // start at 1 because the hook in is before the map is started/finished
+        continue;
+      }
+      data[world] = getGameData[name]();
     }
   }
 }
@@ -635,14 +660,14 @@ document.addEventListener(
 
 function getportalID() { return `u${getGameData.universe()} p${getTotalPortals()}` }
 
-function pushData() {
+function pushData(fromMap) {
   //debug("Starting Zone " + getGameData.world(), "graphs");
   const portalID = getportalID();
   if (!portalSaveData[portalID] || getGameData.world() === 1) { // reset portal data if restarting a portal
     savePortalData(true) // save old portal to history
     portalSaveData[portalID] = new Portal();
   }
-  portalSaveData[portalID].update();
+  portalSaveData[portalID].update(fromMap);
   clearData(GRAPHSETTINGS.maxGraphs);
   savePortalData(false) // save current portal
 }
@@ -733,7 +758,8 @@ const graphList = [
   ["currentTime", false, "Clear Time", {
     yType: "datetime",
     formatter: formatters.datetime,
-    toggles: ["perZone"],
+    toggles: ["perZone", "mapTime", "mapCount"],
+    // , "mapPct" TODO having issues with accumulators on this one, more trouble than it's worth given nobody asked for it
   }],
   // U1 Graphs
   ["heliumOwned", 1, "Helium", {
@@ -817,6 +843,17 @@ const graphList = [
 
 const getGameData = {
   currentTime: () => { return getGameTime() - game.global.portalTime }, // portalTime changes on pause, 'when a portal started' is not a static concept
+  // TODO need to store a 'last exited map' time
+  timeOnMap: () => {
+    let annoyingRemainder = 0;
+    if (game.global.mapStarted < game.global.zoneStarted) {
+      annoyingRemainder = getGameTime() - game.global.mapStarted;
+    }
+    //if (game.global.mapsActive) {
+    return getGameTime() - game.global.mapStarted - annoyingRemainder;
+    //}
+    //else return 0
+  },
   world: () => { return game.global.world },
   challengeActive: () => { return game.global.challengeActive },
   voids: () => { return game.global.totalVoidMaps },
@@ -830,7 +867,7 @@ const getGameData = {
       return 100;
     else return document.getElementById("grid").getElementsByClassName("cellColorOverkill").length;
   },
-  zoneTime: () => { return Math.round((getGameTime() - game.global.zoneStarted) * 100) / 100 }, // rounded to x.xs
+  zoneTime: () => { return Math.round((getGameTime() - game.global.zoneStarted) * 100) / 100 }, // rounded to x.xs, not used
   mapbonus: () => { return game.global.mapBonus },
   empower: () => { return game.global.challengeActive == "Daily" && typeof game.global.dailyChallenge.empower !== "undefined" ? game.global.dailyChallenge.empower.stacks : 0 },
   lastWarp: () => { return game.global.lastWarp },
@@ -869,6 +906,57 @@ const getGameData = {
   cinf: () => { return countChallengeSquaredReward(false, false, true) },
 }
 
+var toggleProperties = { // rules for toggle based graphs
+  mapCount: {
+    exclude: ["mapTime", "mapPct"],
+    graphMods: (graph) => {
+      graph.formatter = undefined;
+      graph.yType = "Linear";
+      graph.graphTitle = "Maps Run"
+      graph.yTitle = "Maps Run"
+      graph.useAccumulator = true;
+    }
+  },
+  mapTime: {
+    exclude: ["mapCount", "mapPct"],
+    graphMods: (graph) => {
+      graph.graphTitle = "Time in Maps";
+      graph.useAccumulator = true;
+    }
+  },
+  mapPct: {
+    exclude: ["mapCount", "mapTime"],
+    graphMods: (graph) => {
+      graph.formatter = undefined;
+      graph.yType = "Linear"
+      graph.graphTitle = "% of Clear time spent Mapping"
+      graph.yTitle = "% Clear Time"
+      graph.useAccumulator = true;
+    }
+  },
+  perZone: {
+    graphMods: (graph) => {
+      graph.graphTitle += " each Zone"
+    },
+  },
+  perHr: {
+    graphMods: (graph) => {
+      graph.graphTitle += " / Hour"
+    },
+  },
+  lifetime: {
+    graphMods: (graph) => {
+      graph.graphTitle += " % of Lifetime Total";
+      graph.yTitle += " % of lifetime"
+    },
+  },
+  s3normalized: {
+    graphMods: (graph) => {
+      graph.graphTitle += `, Normalized to z${maxS3} S3`
+    },
+  },
+}
+
 // Global vars
 var chart1;
 var lastSave = new Date()
@@ -890,7 +978,9 @@ showHideUnusedGraphs()
 var lastTheme = -1;
 
 
-// Wrap the Trimps function for transitioning zones to avoid data loss
+//Wrappers for Trimps functions to reliably collect data
+
+//On Zone transition
 var originalnextWorld = nextWorld;
 nextWorld = function () {
   try {
@@ -898,20 +988,33 @@ nextWorld = function () {
     if (null === portalSaveData) portalSaveData = {};
     if (getGameData.world()) { pushData(); }
   }
-  catch (e) {
-    debug("Gather info failed: " + e)
-  }
+  catch (e) { debug("Gather info failed: " + e) }
   originalnextWorld(...arguments);
 }
 
-// Wrap portal function to update on end of run
+//On Portal
 var originalactivatePortal = activatePortal;
 activatePortal = function () {
-  try {
-    pushData();
-  }
-  catch (e) {
-    debug("Gather info failed: " + e)
-  }
+  try { pushData(); }
+  catch (e) { debug("Gather info failed: " + e) }
   originalactivatePortal(...arguments)
+}
+
+//On Map start
+// This unfortunately loses the last map, since we grab map time at the creation of the map
+var originalbuildMapGrid = buildMapGrid;
+buildMapGrid = function () {
+  try { pushData(true); }
+  catch (e) { debug("Gather info failed: " + e) }
+  originalbuildMapGrid(...arguments)
+}
+
+//On leaving maps for world
+// this captures the last map shen you switch away from maps
+var originalmapsSwitch = mapsSwitch;
+mapsSwitch = function () {
+  originalmapsSwitch(...arguments)
+  try { if (!game.global.mapsActive) pushData(true); }
+  catch (e) { debug("Gather info failed: " + e) }
+
 }
