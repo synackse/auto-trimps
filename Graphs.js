@@ -260,6 +260,7 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
   this.lineGraph = function () {
     var item = this.dataVar;
     this.graphData = [];
+    // TODO all of the ugliness with restting to 'defaults' can be avoided if toggles modify the highcharts object instead of the graph object.
     this.graphTitle = this.baseGraphTitle;
     this.yTitle = this.selectorText;
     if (item === "currentTime") { // TODO This is the ugliest way to handle this, but it's a one off, shoot me.  Resets this graph to defaults.
@@ -477,6 +478,7 @@ function Portal() {
   if (this.universe === 2) {
     this.totalRadon = game.global.totalRadonEarned;
     this.initialScruffy = getGameData.scruffy() - game.stats.bestFluffyExp2.value; // adjust for mid-run graph start
+    this.initialMutes = getGameData.mutatedSeeds();
     this.s3 = getGameData.s3();
   }
   // create an object to collect only the relevant data per zone, without fromEntries because old JS
@@ -792,6 +794,11 @@ const graphList = [
     customFunction: (portal, i) => { return diff("scruffy", portal.initialScruffy)(portal, i) },
     toggles: ["perHr", "perZone",]
   }],
+  ["mutatedSeeds", 2, "Mutated Seeds", {
+    conditional: () => { return getGameData.u2hze() > 200 },
+    customFunction: (portal, i) => { return diff("mutatedSeeds", portal.initialMutes)(portal, i) },
+    toggles: ["perHr", "perZone"]
+  }],
   ["worshippers", 2, "Worshippers", {
     conditional: () => { return getGameData.u2hze() >= 50 }
   }],
@@ -904,6 +911,7 @@ const getGameData = {
     else { return 0; }
   },
   cinf: () => { return countChallengeSquaredReward(false, false, true) },
+  mutatedSeeds: () => { return game.global.mutatedSeedsSpent + game.global.mutatedSeeds }
 }
 
 var toggleProperties = { // rules for toggle based graphs
