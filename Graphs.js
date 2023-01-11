@@ -503,7 +503,7 @@ function Portal() {
       }
       if (name === "timeOnMap") {
         let timeOnMap = getGameData.timeOnMap();
-        if (fromMap) { data[world] = data[world] + timeOnMap || timeOnMap; }// additive per map within a zone
+        if (fromMap) { data[world] = data[world] + timeOnMap || timeOnMap; } // additive per map within a zone
         continue;
       }
       if (name === "mapCount") {
@@ -775,15 +775,18 @@ const graphList = [
   ["essence", 1, "Dark Essence", {
     conditional: () => { return getGameData.essence() < 5.826e+39 },
     customFunction: (portal, i) => { return diff("essence", portal.initialDE)(portal, i) },
-    toggles: ["perHr", "perZone",]
+    toggles: ["perHr", "perZone",],
+    xminFloor: 181,
   }],
   ["lastWarp", 1, "Warpstations", {
     graphTitle: "Warpstations built on previous Giga",
     conditional: () => { return getGameData.u1hze() > 60 && ((game.global.totalHeliumEarned - game.global.heliumLeftover) < 10 ** 10) }, // Warp unlock, less than 10B He allocated
+    xminFloor: 60,
   }],
   ["amals", 1, "Amalgamators"],
   ["wonders", 1, "Wonders", {
-    conditional: () => { return getGameData.challengeActive() === "Experience" }
+    conditional: () => { return getGameData.challengeActive() === "Experience" },
+    xminFloor: 300,
   }],
 
   // U2 Graphs
@@ -797,10 +800,12 @@ const graphList = [
   ["mutatedSeeds", 2, "Mutated Seeds", {
     conditional: () => { return getGameData.u2hze() > 200 },
     customFunction: (portal, i) => { return diff("mutatedSeeds", portal.initialMutes)(portal, i) },
-    toggles: ["perHr", "perZone"]
+    toggles: ["perHr", "perZone"],
+    xminFloor: 200,
   }],
   ["worshippers", 2, "Worshippers", {
-    conditional: () => { return getGameData.u2hze() >= 50 }
+    conditional: () => { return getGameData.u2hze() >= 50 },
+    xminFloor: 50,
   }],
   ["smithies", 2, "Smithies"],
   ["bonfires", 2, "Bonfires", {
