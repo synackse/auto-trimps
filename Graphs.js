@@ -56,14 +56,14 @@ function init() {
   settingbarRow.insertBefore(graphsButton, settingbarRow.childNodes[10])
 
   document.getElementById("settingsRow").innerHTML += `
-        <div id="graphParent" style="display: none; height: 600px; overflow: auto; position: relative;">
-            <div id="graph" style="margin-bottom: 10px;margin-top: 5px; height: 530px;"></div>
-            <div id="graphFooter" style="height: 50px;font-size: 1em;">
-                <div id="graphFooterLine1" style="display: -webkit-flex;flex: 0.75;flex-direction: row; height:30px;"></div>
-                <div id="graphFooterLine2"></div>
-            </div>
-        </div>
-        `;
+    <div id="graphParent" style="display: none; height: 600px; overflow: auto; position: relative;">
+      <div id="graph" style="margin-bottom: 10px;margin-top: 5px; height: 530px;"></div>
+      <div id="graphFooter" style="height: 50px;font-size: 1em;">
+        <div id="graphFooterLine1" style="display: -webkit-flex;flex: 0.75;flex-direction: row; height:30px;"></div>
+        <div id="graphFooterLine2"></div>
+      </div>
+    </div>
+    `;
 
   function createSelector(id, sourceList, textMod = "", onchangeMod = "") {
     let selector = document.createElement("select");
@@ -159,7 +159,7 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
   this.useAccumulator;
   this.xTitle = "Zone";
   this.yTitle = this.selectorText;
-  this.formatter;
+  this.formatter = formatters.defaultPoint;
   this.xminFloor = 1;
   this.yminFloor;
   this.yType = "Linear";
@@ -245,39 +245,25 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
   }
   // Main Graphing function
   this.updateGraph = function () {
-    if (this.graphType == "line") this.lineGraph();
-    if (this.graphType == "column") this.columnGraph();
-    this.formatter = this.formatter
-      || function () {
-        var ser = this.series; // 'this' being the highcharts object that uses formatter()
-        return '<span style="color:' + ser.color + '" >●</span> ' + ser.name + ": <b>" + prettify(this.y) + "</b><br>";
-      };
+    var HighchartsObj;
+    if (this.graphType == "line") HighchartsObj = this.lineGraph();
+    if (this.graphType == "column") HighchartsObj = this.columnGraph();
     saveSelectedGraphs();
-    chart1 = new Highcharts.Chart(this.createHighChartsObj());
+    chart1 = new Highcharts.Chart(HighchartsObj);
     applyRememberedSelections();
   }
   // prepares data series for Highcharts, and optionally transforms it with toggled options, customFunction and/or useAccumulator
   this.lineGraph = function () {
+    var highChartsObj = this.createHighChartsObj() // make default object, to be customized as needed
     var item = this.dataVar;
     this.graphData = [];
-    // TODO all of the ugliness with restting to 'defaults' can be avoided if toggles modify the highcharts object instead of the graph object.
-    this.graphTitle = this.baseGraphTitle;
-    this.yTitle = this.selectorText;
-    if (item === "currentTime") { // TODO This is the ugliest way to handle this, but it's a one off, shoot me.  Resets this graph to defaults.
-      this.yType = "datetime"
-      this.formatter = formatters.datetime;
-      this.useAccumulator = false;
-    }
+    this.useAccumulator = false; // HACKS ( only one set of graphs uses an accumulator and it's on a toggle )
     var maxS3 = Math.max(...Object.values(portalSaveData).map((portal) => portal.s3).filter((s3) => s3));
     var activeToggles = [];
     if (this.toggles) {
-      // create save space for the toggles if they don't exist (TODO should this really go here?)
-      if (GRAPHSETTINGS.toggles[this.id] === undefined) { GRAPHSETTINGS.toggles[this.id] = {} }
-      this.toggles.forEach((toggle) => {
-        if (GRAPHSETTINGS.toggles[this.id][toggle] === undefined) { GRAPHSETTINGS.toggles[this.id][toggle] = false }
-      })
+      // Modify the chart area based on the toggles active
       activeToggles = Object.keys(toggleProperties).filter(toggle => GRAPHSETTINGS.toggles[this.id][toggle])
-      activeToggles.forEach(toggle => toggleProperties[toggle].graphMods(this));
+      activeToggles.forEach(toggle => toggleProperties[toggle].graphMods(this, highChartsObj)); // 
     }
     // parse data per portal
     for (const portal of Object.values(portalSaveData)) {
@@ -293,54 +279,15 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
           if (x < 0) x = null;
         }
         // TOGGLES
-        // Apply the toggled functions to the data. Order matters.
-        if (activeToggles.includes("perZone")) {  // must be first in these checks
-          this.useAccumulator = false; // TODO this might be incredibly stupid, find out later when you use this option for a different case!
-          if (portal.perZoneData[item][index - 1] && portal.perZoneData[item][index]) { // check for missing data, or start of data
-            x = portal.perZoneData[item][index] - portal.perZoneData[item][index - 1]
-            time = portal.perZoneData.currentTime[index] - portal.perZoneData.currentTime[index - 1]
+        if (activeToggles.includes("perZone")) {  // must always be first 
+          [x, time] = toggleProperties.perZone.customFunction(portal, item, index, x);
+        }
+        for (toggle of activeToggles.filter(x => x != "perZone")) {
+          try { x = toggleProperties[toggle].customFunction(portal, item, index, x, time, maxS3); }
+          catch (e) {
+            x = 0;
+            debug(`Error graphing data on: ${item} ${toggle}, ${e.message}`)
           }
-          else {
-            x = null
-            time = null
-          }
-        }
-        if (activeToggles.includes("lifetime")) {
-          let initial;
-          if (item === "heliumOwned") { initial = portal.totalHelium; }
-          if (item === "radonOwned") { initial = portal.totalRadon; }
-          if (item === "c23increase") { initial = portal.cinf; }
-          if (!initial) {
-            debug("Attempted to calc lifetime percent of an unknown type:" + item);
-            continue;
-          }
-          if (item === "c23increase") {
-            let totalBonus = (1 + (initial[1] / 100)) * initial[0]; // calc initial cinf            
-            let c2 = initial[0];
-            let c3 = initial[1];
-            portal.universe == 1 ? c2 += x : c3 += x;
-            let newBonus = (1 + (c3 / 100)) * c2; // calc final cinf
-            x = ((newBonus - totalBonus) / (totalBonus ? totalBonus : 1));
-          }
-          else { x = x / (initial ? initial : 1) }
-        }
-        if (activeToggles.includes("perHr")) {
-          if (x) { x = x / (time / 3600000) }
-        }
-        if (activeToggles.includes("s3normalized")) { // special case for radon
-          x = x / 1.03 ** portal.s3 * 1.03 ** maxS3
-        }
-        if (activeToggles.includes("mapCount")) { // special case for maps
-          try { x = portal.perZoneData.mapCount[index] || 0; }
-          catch { x = 0 }
-        }
-        if (activeToggles.includes("mapPct")) {
-          try { x = portal.perZoneData.timeOnMap[index] / x || 0; }
-          catch { x = 0 }
-        }
-        if (activeToggles.includes("mapTime")) {
-          try { x = portal.perZoneData.timeOnMap[index] || 0; }
-          catch { x = 0 }
         }
         if (this.useAccumulator) x += cleanData.at(-1) !== undefined ? cleanData.at(-1)[1] : 0;
         if (this.typeCheck && typeof x != this.typeCheck) x = null;
@@ -354,11 +301,14 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
         data: cleanData,
       })
     }
+    highChartsObj.series = this.graphData;
+    return highChartsObj;
   }
   // prepares column data series from per-portal data
   this.columnGraph = function () {
+    var highChartsObj = this.createHighChartsObj() // make default object, to be customized as needed
     var item = this.portalVar;
-    this.xTitle = "Portal"
+    highChartsObj.xAxis.title.text = "Portal"
     this.graphData = [];
     let cleanData = []
     // future use: test for datavar in portal, or in perZoneData, if you ever want to make column graphs based on max(perZoneData)
@@ -372,6 +322,8 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
       data: cleanData,
       type: "column",
     });
+    highChartsObj.series = this.graphData;
+    return highChartsObj;
   }
 }
 
@@ -744,17 +696,19 @@ const formatters = {
     let ser = this.series;
     return '<span style="color:' + ser.color + '" >●</span> ' + ser.name + ": <b>" + formatDuration(this.y / 1000) + "</b><br>";
   },
+  defaultPoint: function () {
+    var ser = this.series; // 'this' being the highcharts object that uses formatter()
+    return '<span style="color:' + ser.color + '" >●</span> ' + ser.name + ": <b>" + prettify(this.y) + "</b><br>";
+  }
 }
 
 // Create all the Graph objects
 // Graph(dataVar, universe, selectorText, additionalParams)
-// additionalParams == graphTitle, conditional, customFunction, useAccumulator, toggles, xTitle, yTitle, formatter
+// additionalParams include graphTitle, conditional, customFunction, useAccumulator, toggles, xTitle, yTitle, formatter
 
 // To add a new graph, add it to graphList with the desired options,
 // If using a new dataVar, add that to getGameData
-
-// Toggles are perHr, lifetime, s3normalized
-// To make a new toggle, add the switch case and title mod to Graph.lineGraph
+// To make a new toggle, add the required logic to togglesProperties
 
 const graphList = [
   ["currentTime", false, "Clear Time", {
@@ -855,7 +809,7 @@ const graphList = [
 
 const getGameData = {
   currentTime: () => { return getGameTime() - game.global.portalTime }, // portalTime changes on pause, 'when a portal started' is not a static concept
-  // TODO need to store a 'last exited map' time
+  // TODO need to store a 'last exited map' time ? maybe?  Map time is rough.
   timeOnMap: () => {
     let annoyingRemainder = 0;
     if (game.global.mapStarted < game.global.zoneStarted) {
@@ -919,55 +873,108 @@ const getGameData = {
   mutatedSeeds: () => { return game.global.mutatedSeedsSpent + game.global.mutatedSeeds }
 }
 
-var toggleProperties = { // rules for toggle based graphs
+// rules for toggle based graphs
+var toggleProperties = {
   mapCount: {
     exclude: ["mapTime", "mapPct"],
-    graphMods: (graph) => {
-      graph.formatter = undefined;
-      graph.yType = "Linear";
-      graph.graphTitle = "Maps Run"
-      graph.yTitle = "Maps Run"
+    graphMods: (graph, highChartsObj) => {
+      highChartsObj.tooltip = formatters.defaultPoint;
+      highChartsObj.yAxis.type = "Linear";
+      highChartsObj.title.text = "Maps Run"
+      highChartsObj.yAxis.title.text = "Maps Run"
       graph.useAccumulator = true;
+    },
+    customFunction: (portal, item, index, x) => {
+      x = portal.perZoneData.mapCount[index] || 0;
+      return x
     }
   },
   mapTime: {
     exclude: ["mapCount", "mapPct"],
-    graphMods: (graph) => {
-      graph.graphTitle = "Time in Maps";
+    graphMods: (graph, highChartsObj) => {
+      highChartsObj.title.text = "Time in Maps";
       graph.useAccumulator = true;
+    },
+    customFunction: (portal, item, index, x) => {
+      x = portal.perZoneData.timeOnMap[index] || 0;
+      return x;
     }
   },
-  mapPct: {
+  mapPct: { // not used
     exclude: ["mapCount", "mapTime"],
-    graphMods: (graph) => {
-      graph.formatter = undefined;
-      graph.yType = "Linear"
-      graph.graphTitle = "% of Clear time spent Mapping"
-      graph.yTitle = "% Clear Time"
+    graphMods: (graph, highChartsObj) => {
+      highChartsObj.tooltip = formatters.defaultPoint;
+      highChartsObj.yAxis.type = "Linear"
+      highChartsObj.title.text = "% of Clear time spent Mapping"
+      highChartsObj.yAxis.title.text = "% Clear Time"
       graph.useAccumulator = true;
+    },
+    customFunction: (portal, item, index, x) => {
+      x = portal.perZoneData.timeOnMap[index] / x || 0;
+      return x;
     }
   },
   perZone: {
-    graphMods: (graph) => {
-      graph.graphTitle += " each Zone"
+    graphMods: (graph, highChartsObj) => {
+      highChartsObj.title.text += " each Zone"
+      graph.useAccumulator = false // HACKS this might be incredibly stupid, find out later when you use this option for a different case!
     },
+    customFunction: (portal, item, index, x) => {
+      if (portal.perZoneData[item][index - 1] && portal.perZoneData[item][index]) { // check for missing data, or start of data
+        var x = portal.perZoneData[item][index] - portal.perZoneData[item][index - 1]
+        var time = portal.perZoneData.currentTime[index] - portal.perZoneData.currentTime[index - 1]
+      }
+      else {
+        x = 0
+        time = 0
+      }
+      return [x, time];
+    }
   },
   perHr: {
-    graphMods: (graph) => {
-      graph.graphTitle += " / Hour"
+    graphMods: (graph, highChartsObj) => {
+      highChartsObj.title.text += " / Hour"
     },
+    customFunction: (portal, item, index, x, time) => {
+      if (x) { x = x / (time / 3600000) }
+      return x;
+    }
   },
   lifetime: {
-    graphMods: (graph) => {
-      graph.graphTitle += " % of Lifetime Total";
-      graph.yTitle += " % of lifetime"
+    graphMods: (graph, highChartsObj) => {
+      highChartsObj.title.text += " % of Lifetime Total";
+      highChartsObj.yAxis.title.text += " % of lifetime"
     },
+    customFunction: (portal, item, index, x) => {
+      let initial;
+      if (item === "heliumOwned") { initial = portal.totalHelium; }
+      if (item === "radonOwned") { initial = portal.totalRadon; }
+      if (item === "c23increase") { initial = portal.cinf; }
+      if (!initial) {
+        debug("Attempted to calc lifetime percent of an unknown type:" + item);
+        return 0;
+      }
+      if (item === "c23increase") {
+        let totalBonus = (1 + (initial[1] / 100)) * initial[0]; // calc initial cinf            
+        let c2 = initial[0];
+        let c3 = initial[1];
+        portal.universe == 1 ? c2 += x : c3 += x;
+        let newBonus = (1 + (c3 / 100)) * c2; // calc final cinf
+        x = ((newBonus - totalBonus) / (totalBonus ? totalBonus : 1));
+      }
+      else { x = x / (initial ? initial : 1) }
+      return x;
+    }
   },
   s3normalized: {
-    graphMods: (graph) => {
+    graphMods: (graph, highChartsObj) => {
       var maxS3 = Math.max(...Object.values(portalSaveData).map((portal) => portal.s3).filter((s3) => s3));
-      graph.graphTitle += `, Normalized to z${maxS3} S3`
+      highChartsObj.title.text += `, Normalized to z${maxS3} S3`
     },
+    customFunction: (portal, item, index, x, time, maxS3) => {
+      x = x / 1.03 ** portal.s3 * 1.03 ** maxS3
+      return x;
+    }
   },
 }
 
@@ -990,6 +997,16 @@ loadGraphData();
 init()
 showHideUnusedGraphs()
 var lastTheme = -1;
+
+// initialize save space for the toggles
+for (const graph of graphList) {
+  if (graph.toggles) {
+    if (GRAPHSETTINGS.toggles[graph.id] === undefined) { GRAPHSETTINGS.toggles[graph.id] = {} }
+    graph.toggles.forEach((toggle) => {
+      if (GRAPHSETTINGS.toggles[graph.id][toggle] === undefined) { GRAPHSETTINGS.toggles[graph.id][toggle] = false }
+    })
+  }
+}
 
 
 //Wrappers for Trimps functions to reliably collect data
