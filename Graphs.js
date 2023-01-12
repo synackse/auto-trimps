@@ -965,6 +965,7 @@ var toggleProperties = { // rules for toggle based graphs
   },
   s3normalized: {
     graphMods: (graph) => {
+      var maxS3 = Math.max(...Object.values(portalSaveData).map((portal) => portal.s3).filter((s3) => s3));
       graph.graphTitle += `, Normalized to z${maxS3} S3`
     },
   },
