@@ -722,7 +722,7 @@ const graphList = [
     toggles: ["perHr", "perZone", "lifetime"]
   }],
   ["fluffy", 1, "Fluffy Exp", {
-    conditional: () => { return getGameData.u1hze() >= 300 && getGameData.fluffy() < 3413330078125000 }, // pre unlock, post E10L10
+    conditional: () => { return getGameData.u1hze() >= 299 && getGameData.fluffy() < 3413330078125000 }, // pre unlock, post E10L10
     customFunction: (portal, i) => { return diff("fluffy", portal.initialFluffy)(portal, i) },
     toggles: ["perHr", "perZone",]
   }],
@@ -734,7 +734,7 @@ const graphList = [
   }],
   ["lastWarp", 1, "Warpstations", {
     graphTitle: "Warpstations built on previous Giga",
-    conditional: () => { return getGameData.u1hze() > 60 && ((game.global.totalHeliumEarned - game.global.heliumLeftover) < 10 ** 10) }, // Warp unlock, less than 10B He allocated
+    conditional: () => { return getGameData.u1hze() >= 59 && ((game.global.totalHeliumEarned - game.global.heliumLeftover) < 10 ** 10) }, // Warp unlock, less than 10B He allocated
     xminFloor: 60,
   }],
   ["amals", 1, "Amalgamators"],
@@ -752,13 +752,13 @@ const graphList = [
     toggles: ["perHr", "perZone",]
   }],
   ["mutatedSeeds", 2, "Mutated Seeds", {
-    conditional: () => { return getGameData.u2hze() > 200 },
+    conditional: () => { return getGameData.u2hze() >= 200 },
     customFunction: (portal, i) => { return diff("mutatedSeeds", portal.initialMutes)(portal, i) },
     toggles: ["perHr", "perZone"],
     xminFloor: 200,
   }],
   ["worshippers", 2, "Worshippers", {
-    conditional: () => { return getGameData.u2hze() >= 50 },
+    conditional: () => { return getGameData.u2hze() >= 49 },
     xminFloor: 50,
   }],
   ["smithies", 2, "Smithies"],
@@ -797,8 +797,8 @@ const graphList = [
   ["overkill", false, "Overkill Cells", {
     // Overkill unlock zones (roughly)
     conditional: () => {
-      return ((getGameData.universe() == 1 && getGameData.u1hze() >= 170)
-        || getGameData.universe() == 2 && getGameData.u2hze() >= 201)
+      return ((getGameData.universe() == 1 && getGameData.u1hze() >= 169)
+        || (getGameData.universe() == 2 && getGameData.u2hze() >= 200))
     }
   }],
   ["mapbonus", false, "Map Bonus"],
