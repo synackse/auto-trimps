@@ -223,11 +223,7 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
         ],
         type: this.yType,
         labels: {
-          formatter: function () {
-            // These are Trimps format functions for durations(modified) and numbers, respectively
-            if (this.dateTimeLabelFormat) return formatDuration(this.value / 1000)
-            else return prettify(this.value);
-          }
+          formatter: formatters.defaultAxis
         }
       },
       tooltip: {
@@ -304,24 +300,49 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
     highChartsObj.series = this.graphData;
     return highChartsObj;
   }
-  // prepares column data series from per-portal data
+  // prepares multi-column data series from per-portal data.
   this.columnGraph = function () {
     var highChartsObj = this.createHighChartsObj() // make default object, to be customized as needed
-    var item = this.portalVar;
     highChartsObj.xAxis.title.text = "Portal"
-    this.graphData = [];
-    let cleanData = []
-    // future use: test for datavar in portal, or in perZoneData, if you ever want to make column graphs based on max(perZoneData)
-    for (const portal of Object.values(portalSaveData)) {
-      if (portal.universe == GRAPHSETTINGS.universeSelection) {
-        cleanData.push([portal.totalPortals, portal[item]])
-      }
+    highChartsObj.plotOptions.series = { groupPadding: .05, pointPadding: 0, animation: false, }
+    // set up axes for each column so they scale independently
+    var activeColumns = this.columns.filter(column => !(column.universe && column.universe != GRAPHSETTINGS.universeSelection));
+    if (GRAPHSETTINGS.toggles[this.id].perHr) { // disable time when comparing things over time.  x/x is not interesting data.
+      toggleProperties.perHr.graphMods(false, highChartsObj)
+      activeColumns = activeColumns.filter(column => column.dataVar !== "currentTime")
     }
-    this.graphData.push({
-      name: this.yTitle,
-      data: cleanData,
-      type: "column",
-    });
+    // all of the yaxes showing is just visual noise, all invisible hurts me, but I have no good alternatives
+    var axes = activeColumns.map(column => { return { visible: false } });
+
+    this.graphData = [];
+    var yAxis = 0;
+    for (const column of activeColumns) {
+      let cleanData = []
+      for (const portal of Object.values(portalSaveData)) {
+        if (portal.universe != GRAPHSETTINGS.universeSelection) continue;
+        let data;
+        if (portal[column.dataVar]) data = portal[column.dataVar];
+        if (portal.perZoneData[column.dataVar]) data = portal.perZoneData[column.dataVar].at(-1);
+        if (column.customFunction) data = column.customFunction(portal, data);
+        if (GRAPHSETTINGS.toggles[this.id].perHr) { // HACKS a headache for future me if other toggles are wanted here.
+          data = data / (portal.perZoneData.currentTime.at(-1) / 3600000);
+        }
+        if (column.dataVar === "currentTime") { // TODO THIS DOES NOTHING AAAAAAAAAAAAAAAAA
+          axes[yAxis].tooltipValueFormat = formatters.datetime;
+          axes[yAxis].type = "datetime";
+        }
+        cleanData.push([portal.totalPortals, data])
+      }
+      this.graphData.push({
+        name: column.title,
+        data: cleanData,
+        type: "column",
+        yAxis: yAxis,
+      });
+      yAxis += 1;
+    }
+
+    highChartsObj.yAxis = axes;
     highChartsObj.series = this.graphData;
     return highChartsObj;
   }
@@ -673,8 +694,18 @@ function loadGraphData() {
       }
     }
   }
-  loadedSettings = JSON.parse(localStorage.getItem("GRAPHSETTINGS"));
+  var loadedSettings = JSON.parse(localStorage.getItem("GRAPHSETTINGS"));
   if (loadedSettings !== null) GRAPHSETTINGS = loadedSettings;
+  // initialize save space for the toggles
+  if (GRAPHSETTINGS.toggles == null) GRAPHSETTINGS.toggles = {};
+  for (const graph of graphList) {
+    if (graph.toggles) {
+      if (GRAPHSETTINGS.toggles[graph.id] === undefined) { GRAPHSETTINGS.toggles[graph.id] = {} }
+      graph.toggles.forEach((toggle) => {
+        if (GRAPHSETTINGS.toggles[graph.id][toggle] === undefined) { GRAPHSETTINGS.toggles[graph.id][toggle] = false }
+      })
+    }
+  }
   MODULES.graphs = {}
   MODULES.graphs.useDarkAlways = false
 }
@@ -699,6 +730,11 @@ const formatters = {
   defaultPoint: function () {
     var ser = this.series; // 'this' being the highcharts object that uses formatter()
     return '<span style="color:' + ser.color + '" >●</span> ' + ser.name + ": <b>" + prettify(this.y) + "</b><br>";
+  },
+  defaultAxis: function () {
+    // These are Trimps format functions for durations(modified) and numbers, respectively
+    if (this.dateTimeLabelFormat) return formatDuration(this.value / 1000)
+    else return prettify(this.value);
   }
 }
 
@@ -711,101 +747,107 @@ const formatters = {
 // To make a new toggle, add the required logic to togglesProperties
 
 const graphList = [
-  ["currentTime", false, "Clear Time", {
+  new Graph("currentTime", false, "Clear Time", {
     yType: "datetime",
     formatter: formatters.datetime,
     toggles: ["perZone", "mapTime", "mapCount"],
     // , "mapPct" TODO having issues with accumulators on this one, more trouble than it's worth given nobody asked for it
-  }],
+  }),
   // U1 Graphs
-  ["heliumOwned", 1, "Helium", {
+  new Graph("heliumOwned", 1, "Helium", {
     toggles: ["perHr", "perZone", "lifetime"]
-  }],
-  ["fluffy", 1, "Fluffy Exp", {
+  }),
+  new Graph("fluffy", 1, "Fluffy Exp", {
     conditional: () => { return getGameData.u1hze() >= 299 && getGameData.fluffy() < 3413330078125000 }, // pre unlock, post E10L10
     customFunction: (portal, i) => { return diff("fluffy", portal.initialFluffy)(portal, i) },
     toggles: ["perHr", "perZone",]
-  }],
-  ["essence", 1, "Dark Essence", {
+  }),
+  new Graph("essence", 1, "Dark Essence", {
     conditional: () => { return getGameData.essence() < 5.826e+39 },
     customFunction: (portal, i) => { return diff("essence", portal.initialDE)(portal, i) },
     toggles: ["perHr", "perZone",],
     xminFloor: 181,
-  }],
-  ["lastWarp", 1, "Warpstations", {
+  }),
+  new Graph("lastWarp", 1, "Warpstations", {
     graphTitle: "Warpstations built on previous Giga",
     conditional: () => { return getGameData.u1hze() >= 59 && ((game.global.totalHeliumEarned - game.global.heliumLeftover) < 10 ** 10) }, // Warp unlock, less than 10B He allocated
     xminFloor: 60,
-  }],
-  ["amals", 1, "Amalgamators"],
-  ["wonders", 1, "Wonders", {
+  }),
+  new Graph("amals", 1, "Amalgamators"),
+  new Graph("wonders", 1, "Wonders", {
     conditional: () => { return getGameData.challengeActive() === "Experience" },
     xminFloor: 300,
-  }],
+  }),
 
   // U2 Graphs
-  ["radonOwned", 2, "Radon", {
+  new Graph("radonOwned", 2, "Radon", {
     toggles: ["perHr", "perZone", "lifetime", "s3normalized"]
-  }],
-  ["scruffy", 2, "Scruffy Exp", {
+  }),
+  new Graph("scruffy", 2, "Scruffy Exp", {
     customFunction: (portal, i) => { return diff("scruffy", portal.initialScruffy)(portal, i) },
     toggles: ["perHr", "perZone",]
-  }],
-  ["mutatedSeeds", 2, "Mutated Seeds", {
+  }),
+  new Graph("mutatedSeeds", 2, "Mutated Seeds", {
     conditional: () => { return getGameData.u2hze() >= 200 },
     customFunction: (portal, i) => { return diff("mutatedSeeds", portal.initialMutes)(portal, i) },
     toggles: ["perHr", "perZone"],
     xminFloor: 200,
-  }],
-  ["worshippers", 2, "Worshippers", {
+  }),
+  new Graph("worshippers", 2, "Worshippers", {
     conditional: () => { return getGameData.u2hze() >= 49 },
     xminFloor: 50,
-  }],
-  ["smithies", 2, "Smithies"],
-  ["bonfires", 2, "Bonfires", {
+  }),
+  new Graph("smithies", 2, "Smithies"),
+  new Graph("bonfires", 2, "Bonfires", {
     graphTitle: "Active Bonfires",
     conditional: () => { return getGameData.challengeActive() === "Hypothermia" }
-  }],
-  ["embers", 2, "Embers", {
+  }),
+  new Graph("embers", 2, "Embers", {
     conditional: () => { return getGameData.challengeActive() === "Hypothermia" }
-  }],
-  ["cruffys", 2, "Cruffys", {
+  }),
+  new Graph("cruffys", 2, "Cruffys", {
     conditional: () => { return getGameData.challengeActive() === "Nurture" }
-  }],
+  }),
 
   // Generic Graphs
-  ["c23increase", false, "C2 Bonus", {
+  new Graph("c23increase", false, "C2 Bonus", {
     conditional: () => { return game.global.runningChallengeSquared },
     toggles: ["perHr", "perZone", "lifetime"]
-  }],
-  ["voids", false, "Void Map History", {
+  }),
+  new Graph("voids", false, "Void Map History", {
     graphTitle: "Void Map History (voids finished during the same level acquired are not counted/tracked)",
     yTitle: "Number of Void Maps",
-  }],
-  [false, false, "Total Voids", {
-    portalVar: "totalVoidMaps",
-    graphType: "column",
-    graphTitle: "Total Void Maps Run"
-  }],
-  [false, false, "Nullifium Gained", {
-    portalVar: "totalNullifium",
-    graphType: "column",
-  }],
-  ["coord", false, "Coordinations", {
+  }),
+  new Graph("coord", false, "Coordinations", {
     graphTitle: "Unbought Coordinations",
-  }],
-  ["overkill", false, "Overkill Cells", {
+  }),
+  new Graph("overkill", false, "Overkill Cells", {
     // Overkill unlock zones (roughly)
     conditional: () => {
       return ((getGameData.universe() == 1 && getGameData.u1hze() >= 169)
         || (getGameData.universe() == 2 && getGameData.u2hze() >= 200))
     }
-  }],
-  ["mapbonus", false, "Map Bonus"],
-  ["empower", false, "Empower", {
+  }),
+  new Graph("mapbonus", false, "Map Bonus"),
+  new Graph("empower", false, "Empower", {
     conditional: () => { return getGameData.challengeActive() === "Daily" && typeof game.global.dailyChallenge.empower !== "undefined" }
-  }]
-].map(opts => new Graph(...opts));
+  }),
+  new Graph(false, false, "Run Stats", {
+    graphTitle: "Portal Stats",
+    graphType: "column",
+    toggles: ["perHr"],
+    columns: [
+      { dataVar: "totalVoidMaps", title: "Voids" },
+      { dataVar: "totalNullifium", title: "Nu" },
+      { dataVar: "heliumOwned", universe: 1, title: "Helium" },
+      { dataVar: "radonOwned", universe: 2, title: "Radon" },
+      { dataVar: "fluffy", universe: 1, title: "Pet Exp", customFunction: (portal, x) => { return x - portal.initialFluffy } },
+      { dataVar: "scruffy", universe: 2, title: "Pet Exp", customFunction: (portal, x) => { return x - portal.initialScruffy } },
+      { dataVar: "currentTime", title: "Run Time", type: "datetime" }, // TODO some vars should be on shared axes... woo
+      //{ dataVar: "timeOnMap", title: "Mapping Time", type: "datetime", customFunction: () => { } }, // TODO should be sum not max
+    ],
+  }),
+]
 
 const getGameData = {
   currentTime: () => { return getGameTime() - game.global.portalTime }, // portalTime changes on pause, 'when a portal started' is not a static concept
@@ -998,15 +1040,7 @@ init()
 showHideUnusedGraphs()
 var lastTheme = -1;
 
-// initialize save space for the toggles
-for (const graph of graphList) {
-  if (graph.toggles) {
-    if (GRAPHSETTINGS.toggles[graph.id] === undefined) { GRAPHSETTINGS.toggles[graph.id] = {} }
-    graph.toggles.forEach((toggle) => {
-      if (GRAPHSETTINGS.toggles[graph.id][toggle] === undefined) { GRAPHSETTINGS.toggles[graph.id][toggle] = false }
-    })
-  }
-}
+
 
 
 //Wrappers for Trimps functions to reliably collect data
