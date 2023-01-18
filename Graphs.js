@@ -258,8 +258,8 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
     var activeToggles = [];
     if (this.toggles) {
       // Modify the chart area based on the toggles active
-      activeToggles = Object.keys(toggleProperties).filter(toggle => GRAPHSETTINGS.toggles[this.id][toggle])
-      activeToggles.forEach(toggle => toggleProperties[toggle].graphMods(this, highChartsObj)); // 
+      activeToggles = Object.keys(toggledGraphs).filter(toggle => GRAPHSETTINGS.toggles[this.id][toggle])
+      activeToggles.forEach(toggle => toggledGraphs[toggle].graphMods(this, highChartsObj)); // 
     }
     // parse data per portal
     for (const portal of Object.values(portalSaveData)) {
@@ -276,10 +276,10 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
         }
         // TOGGLES
         if (activeToggles.includes("perZone")) {  // must always be first 
-          [x, time] = toggleProperties.perZone.customFunction(portal, item, index, x);
+          [x, time] = toggledGraphs.perZone.customFunction(portal, item, index, x);
         }
         for (toggle of activeToggles.filter(x => x != "perZone")) {
-          try { x = toggleProperties[toggle].customFunction(portal, item, index, x, time, maxS3); }
+          try { x = toggledGraphs[toggle].customFunction(portal, item, index, x, time, maxS3); }
           catch (e) {
             x = 0;
             debug(`Error graphing data on: ${item} ${toggle}, ${e.message}`)
@@ -308,11 +308,11 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
     // set up axes for each column so they scale independently
     var activeColumns = this.columns.filter(column => !(column.universe && column.universe != GRAPHSETTINGS.universeSelection));
     if (GRAPHSETTINGS.toggles[this.id].perHr) { // disable time when comparing things over time.  x/x is not interesting data.
-      toggleProperties.perHr.graphMods(false, highChartsObj)
+      toggledGraphs.perHr.graphMods(false, highChartsObj)
       activeColumns = activeColumns.filter(column => column.dataVar !== "currentTime")
     }
     // all of the yaxes showing is just visual noise, all invisible hurts me, but I have no good alternatives
-    var axes = activeColumns.map(column => { return { visible: false } });
+    var axes = activeColumns.map(column => { return { visible: false, endOnTick: false } });
 
     this.graphData = [];
     var yAxis = 0;
@@ -328,18 +328,19 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
         if (GRAPHSETTINGS.toggles[this.id].perHr) { // HACKS a headache for future me if other toggles are wanted here.
           data = data / (portal.perZoneData.currentTime.at(-1) / 3600000);
         }
-        if (column.dataVar === "currentTime") { // TODO THIS DOES NOTHING AAAAAAAAAAAAAAAAA
-          axes[yAxis].tooltipValueFormat = formatters.datetime;
-          axes[yAxis].type = "datetime";
-        }
         cleanData.push([portal.totalPortals, data])
       }
-      this.graphData.push({
+      let series = {
         name: column.title,
         data: cleanData,
         type: "column",
         yAxis: yAxis,
-      });
+        color: column.color,
+      }
+      if (column.dataVar === "currentTime") { // HACKS override formatter for time vars
+        series["tooltip"] = { "pointFormatter": formatters.datetime }
+      }
+      this.graphData.push(series);
       yAxis += 1;
     }
 
@@ -402,8 +403,8 @@ function drawGraph() {
     checkbox.checked = GRAPHSETTINGS.toggles[graph][toggle];
     // create a godawful inline function to set saved value on change, apply exclusions, and update the graph
     let funcString = "";
-    if (toggleProperties[toggle] && toggleProperties[toggle].exclude) {
-      toggleProperties[toggle].exclude.forEach(exTog => funcString += `GRAPHSETTINGS.toggles.${graph}.${exTog} = false; `)
+    if (toggledGraphs[toggle] && toggledGraphs[toggle].exclude) {
+      toggledGraphs[toggle].exclude.forEach(exTog => funcString += `GRAPHSETTINGS.toggles.${graph}.${exTog} = false; `)
     }
     funcString += `GRAPHSETTINGS.toggles.${graph}.${toggle} = this.checked; drawGraph();`
     checkbox.setAttribute("onclick", funcString);
@@ -834,18 +835,18 @@ const graphList = [
   new Graph("empower", false, "Empower", {
     conditional: () => { return getGameData.challengeActive() === "Daily" && typeof game.global.dailyChallenge.empower !== "undefined" }
   }),
-  new Graph(false, false, "Run Stats", {
+  new Graph(false, false, "Portal Stats", {
     graphTitle: "Portal Stats",
     graphType: "column",
     toggles: ["perHr"],
     columns: [
-      { dataVar: "totalVoidMaps", title: "Voids" },
-      { dataVar: "totalNullifium", title: "Nu" },
-      { dataVar: "heliumOwned", universe: 1, title: "Helium" },
-      { dataVar: "radonOwned", universe: 2, title: "Radon" },
-      { dataVar: "fluffy", universe: 1, title: "Pet Exp", customFunction: (portal, x) => { return x - portal.initialFluffy } },
-      { dataVar: "scruffy", universe: 2, title: "Pet Exp", customFunction: (portal, x) => { return x - portal.initialScruffy } },
-      { dataVar: "currentTime", title: "Run Time", type: "datetime" }, // TODO some vars should be on shared axes... woo
+      { dataVar: "totalVoidMaps", title: "Voids", color: "#2E0854" },
+      { dataVar: "totalNullifium", title: "Nu", color: "#8a008a" },
+      { dataVar: "heliumOwned", universe: 1, title: "Helium", color: "#5bc0de" },
+      { dataVar: "radonOwned", universe: 2, title: "Radon", color: "#5bc0de" },
+      { dataVar: "fluffy", universe: 1, title: "Pet Exp", color: "green", customFunction: (portal, x) => { return x - portal.initialFluffy } },
+      { dataVar: "scruffy", universe: 2, title: "Pet Exp", color: "green", customFunction: (portal, x) => { return x - portal.initialScruffy } },
+      { dataVar: "currentTime", title: "Run Time", type: "datetime", color: "#928DAD" }, // TODO some vars should be on shared axes... woo
       //{ dataVar: "timeOnMap", title: "Mapping Time", type: "datetime", customFunction: () => { } }, // TODO should be sum not max
     ],
   }),
@@ -918,7 +919,7 @@ const getGameData = {
 }
 
 // rules for toggle based graphs
-var toggleProperties = {
+var toggledGraphs = {
   mapCount: {
     exclude: ["mapTime", "mapPct"],
     graphMods: (graph, highChartsObj) => {
