@@ -304,7 +304,7 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
   this.columnGraph = function () {
     var highChartsObj = this.createHighChartsObj() // make default object, to be customized as needed
     highChartsObj.xAxis.title.text = "Portal"
-    highChartsObj.plotOptions.series = { groupPadding: .05, pointPadding: 0, animation: false, }
+    highChartsObj.plotOptions.series = { groupPadding: .2, pointPadding: 0, animation: false, }
     // set up axes for each column so they scale independently
     var activeColumns = this.columns.filter(column => !(column.universe && column.universe != GRAPHSETTINGS.universeSelection));
     if (GRAPHSETTINGS.toggles[this.id].perHr) { // disable time when comparing things over time.  x/x is not interesting data.
@@ -923,7 +923,7 @@ var toggledGraphs = {
   mapCount: {
     exclude: ["mapTime", "mapPct"],
     graphMods: (graph, highChartsObj) => {
-      highChartsObj.tooltip = formatters.defaultPoint;
+      highChartsObj.tooltip = { pointFormatter: formatters.defaultPoint };
       highChartsObj.yAxis.type = "Linear";
       highChartsObj.title.text = "Maps Run"
       highChartsObj.yAxis.title.text = "Maps Run"
@@ -948,7 +948,7 @@ var toggledGraphs = {
   mapPct: { // not used
     exclude: ["mapCount", "mapTime"],
     graphMods: (graph, highChartsObj) => {
-      highChartsObj.tooltip = formatters.defaultPoint;
+      highChartsObj.tooltip = { pointFormatter: formatters.defaultPoint };
       highChartsObj.yAxis.type = "Linear"
       highChartsObj.title.text = "% of Clear time spent Mapping"
       highChartsObj.yAxis.title.text = "% Clear Time"
