@@ -317,6 +317,7 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
     this.graphData = [];
     var yAxis = 0;
     for (const column of activeColumns) {
+      // TODO set colors based on dataVar to make Zek happy
       let cleanData = []
       for (const portal of Object.values(portalSaveData)) {
         if (portal.universe != GRAPHSETTINGS.universeSelection) continue;
@@ -602,10 +603,11 @@ function autoToggleGraph() {
   var graphParent = document.getElementById("graphParent");
   if ("block" === graphParent.style.display) {
     graphParent.style.display = "none";
+    trimpStatsDisplayed = false // HACKS disable hotkeys without touching Trimps settings
   }
   else {
     graphParent.style.display = "block";
-    document.getElementById("deleteSpecificTextBox").focus()
+    trimpStatsDisplayed = true // HACKS disable hotkeys without touching Trimps settings
   }
 }
 
