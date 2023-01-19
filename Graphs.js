@@ -109,6 +109,7 @@ function init() {
   let tipsText = "You can zoom by dragging a box around an area. You can turn portals off by clicking them on the legend. Quickly view the last portal by clicking it off, then Invert Selection. Or by clicking All Off, then clicking the portal on. To delete a portal, Type its portal number in the box and press Delete Specific. Using negative numbers in the Delete Specific box will KEEP that many portals (starting counting backwards from the current one), ie: if you have Portals 1000-1015, typing -10 will keep 1005-1015."
   document.getElementById("graphFooterLine2").innerHTML += `
     <span style="float: left;" onmouseover='tooltip("Tips", "customText", event, "${tipsText}")' onmouseout='tooltip("hide")'>Tips: Hover for usage tips.</span>
+    <span style="margin-left: 5rem"><input type="checkbox" id="liveCheckbox" onclick="saveSetting('live', this.checked);"> Live Updates</span>
     <input onclick="toggleDarkGraphs()" style="height: 20px; float: right; margin-right: 0.5vw;" type="checkbox" id="blackCB">
     <span style="float: right; margin-right: 0.5vw;">Black Graphs:</span>
     `;
@@ -381,13 +382,14 @@ function swapGraphUniverse() {
   document.getElementById(`${inactive}graphSelection`).style.display = 'none';
 }
 
+function lookupGraph(selectorText) {
+  for (const graph of graphList) {
+    if (graph.selectorText === selectorText) return graph;
+  }
+}
+
 // Draws the graph currently selected by the user
 function drawGraph() {
-  function lookupGraph(selectorText) {
-    for (const graph of graphList) {
-      if (graph.selectorText === selectorText) return graph;
-    }
-  }
   // TOGGLES
   function makeCheckbox(graph, toggle) {
     // create checkbox element labeled with the toggle
@@ -417,12 +419,12 @@ function drawGraph() {
     return container;
   }
   pushData(); // update current zone data on request
+  updateGraph();
   let universe = GRAPHSETTINGS.universeSelection;
   let selectedGraph = document.getElementById(`u${universe}graphSelection`);
   if (selectedGraph.value) {
     // draw the graph
     let graph = lookupGraph(selectedGraph.value);
-    graph.updateGraph();
     // create toggle elements
     toggleDiv = document.querySelector("#toggleDiv")
     toggleDiv.innerHTML = "";
@@ -433,6 +435,16 @@ function drawGraph() {
     }
   }
   showHideUnusedGraphs();
+}
+
+function updateGraph() {
+  let universe = GRAPHSETTINGS.universeSelection;
+  let selectedGraph = document.getElementById(`u${universe}graphSelection`);
+  if (selectedGraph.value) {
+    // draw the graph
+    let graph = lookupGraph(selectedGraph.value);
+    graph.updateGraph();
+  }
 }
 
 // Stores and updates data for an individual portal
@@ -491,11 +503,13 @@ function Portal() {
 }
 
 function clearData(keepN, clrall = false) {
+  let changed = false;
   let currentPortalNumber = getTotalPortals();
   if (clrall) {
     for (const [portalID, portalData] of Object.entries(portalSaveData)) {
       if (portalData.totalPortals != currentPortalNumber) {
         delete portalSaveData[portalID];
+        changed = true;
       }
     }
   } else {
@@ -504,11 +518,14 @@ function clearData(keepN, clrall = false) {
       if (totalSaved > keepN && portalData.totalPortals <= currentPortalNumber - keepN) {
         delete portalSaveData[portalID];
         totalSaved--;
+        changed = true;
       }
     }
   }
-  savePortalData(true)
-  showHideUnusedGraphs();
+  if (changed) {
+    savePortalData(true)
+    showHideUnusedGraphs();
+  }
 }
 
 function deleteSpecific() {
@@ -604,10 +621,12 @@ function autoToggleGraph() {
   var graphParent = document.getElementById("graphParent");
   if ("block" === graphParent.style.display) {
     graphParent.style.display = "none";
+    GRAPHSETTINGS.open = false;
     trimpStatsDisplayed = false // HACKS disable hotkeys without touching Trimps settings
   }
   else {
     graphParent.style.display = "block";
+    GRAPHSETTINGS.open = true;
     trimpStatsDisplayed = true // HACKS disable hotkeys without touching Trimps settings
   }
 }
@@ -648,6 +667,9 @@ function pushData(fromMap) {
   portalSaveData[portalID].update(fromMap);
   clearData(GRAPHSETTINGS.maxGraphs);
   savePortalData(false) // save current portal
+  if (GRAPHSETTINGS.live && GRAPHSETTINGS.open) {
+    updateGraph();
+  }
 }
 
 // Hide graphs that have no collected data
@@ -709,6 +731,8 @@ function loadGraphData() {
       })
     }
   }
+  GRAPHSETTINGS.open = false;
+  GRAPHSETTINGS.live = false; // TODO unsafe to have this on in liq, disable on load for now. 
   MODULES.graphs = {}
   MODULES.graphs.useDarkAlways = false
 }
