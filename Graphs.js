@@ -637,7 +637,6 @@ function autoToggleGraph() {
 function escapeATWindows() {
   var a = document.getElementById("tooltipDiv");
   if ("none" != a.style.display) return void cancelTooltip();
-  game.options.displayed && toggleSettingsMenu();
   var b = document.getElementById("autoSettings");
   if (b) "block" === b.style.display && (b.style.display = "none");
   var b = document.getElementById("autoTrimpsTabBarMenu");
@@ -645,6 +644,7 @@ function escapeATWindows() {
   var c = document.getElementById("graphParent");
   if (c) "block" === c.style.display && (c.style.display = "none");
 }
+
 document.addEventListener(
   "keydown",
   function (a) {
