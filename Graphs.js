@@ -225,7 +225,9 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
         type: this.yType,
         labels: {
           formatter: formatters.defaultAxis
-        }
+        },
+        endOnTick: false,
+        maxPadding: .05,
       },
       tooltip: {
         pointFormatter: this.formatter,
