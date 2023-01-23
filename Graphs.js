@@ -639,20 +639,17 @@ function escapeATWindows() {
   if ("none" != a.style.display) return void cancelTooltip();
   game.options.displayed && toggleSettingsMenu();
   var b = document.getElementById("autoSettings");
-  "block" === b.style.display && (b.style.display = "none");
+  if (b) "block" === b.style.display && (b.style.display = "none");
   var b = document.getElementById("autoTrimpsTabBarMenu");
-  "block" === b.style.display && (b.style.display = "none");
+  if (b) "block" === b.style.display && (b.style.display = "none");
   var c = document.getElementById("graphParent");
-  "block" === c.style.display && (c.style.display = "none");
+  if (c) "block" === c.style.display && (c.style.display = "none");
 }
 document.addEventListener(
   "keydown",
   function (a) {
     1 != game.options.menu.hotkeys.enabled || game.global.preMapsActive || game.global.lockTooltip
       || ctrlPressed || heirloomsShown || 27 != a.keyCode || escapeATWindows();
-    if (["1", "2", "3", "4", "5"].includes(a.key)) {
-      //a.stopPropagation() // does not work, whee
-    }
   },
   true
 );
