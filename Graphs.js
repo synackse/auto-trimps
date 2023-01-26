@@ -39,7 +39,7 @@ function saveSetting(key, value) {
 
 // Create all of the UI elements and load in scripts needed
 // TODO reduce screaming
-function init() {
+function createUI() {
   var head = document.getElementsByTagName("head")[0]
 
   var chartscript = document.createElement("script");
@@ -109,7 +109,8 @@ function init() {
   let tipsText = "You can zoom by dragging a box around an area. You can turn portals off by clicking them on the legend. Quickly view the last portal by clicking it off, then Invert Selection. Or by clicking All Off, then clicking the portal on. To delete a portal, Type its portal number in the box and press Delete Specific. Using negative numbers in the Delete Specific box will KEEP that many portals (starting counting backwards from the current one), ie: if you have Portals 1000-1015, typing -10 will keep 1005-1015."
   document.getElementById("graphFooterLine2").innerHTML += `
     <span style="float: left;" onmouseover='tooltip("Tips", "customText", event, "${tipsText}")' onmouseout='tooltip("hide")'>Tips: Hover for usage tips.</span>
-    <span style="margin-left: 5rem"><input type="checkbox" id="liveCheckbox" onclick="saveSetting('live', this.checked);"> Live Updates</span>
+    <span style="float: left; margin-left: 2vw"><input type="checkbox" id="liveCheckbox" onclick="saveSetting('live', this.checked);"> Live Updates</span>
+    <span style="float: left; margin-left: 2vw">Show <input style="width:40px;" id="portalCountTextBox" onchange="saveSetting('portalsDisplayed', this.value); updateGraph();"> Portals</span>
     <input onclick="toggleDarkGraphs()" style="height: 20px; float: right; margin-right: 0.5vw;" type="checkbox" id="blackCB">
     <span style="float: right; margin-right: 0.5vw;">Black Graphs:</span>
     `;
@@ -144,7 +145,8 @@ function init() {
   }
 
   MODULES.graphs.themeChanged();
-  document.querySelector("#blackCB").checked = GRAPHSETTINGS.darkTheme
+  document.querySelector("#blackCB").checked = GRAPHSETTINGS.darkTheme;
+  document.querySelector("#portalCountTextBox").value = GRAPHSETTINGS.portalsDisplayed;
 }
 
 // Graph constructor 
@@ -265,7 +267,8 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
       activeToggles.forEach(toggle => toggledGraphs[toggle].graphMods(this, highChartsObj)); // 
     }
     // parse data per portal
-    for (const portal of Object.values(portalSaveData)) {
+    let portalCount = 0;
+    for (const portal of Object.values(portalSaveData).reverse()) {
       if (!(item in portal.perZoneData)) continue; // ignore blank
       if (portal.universe != GRAPHSETTINGS.universeSelection) continue; // ignore inactive universe
       let cleanData = [];
@@ -299,7 +302,10 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
         name: `Portal ${portal.totalPortals}: ${portal.challenge}`,
         data: cleanData,
       })
+      portalCount++;
+      if (portalCount >= GRAPHSETTINGS.portalsDisplayed) break;
     }
+    this.graphData = this.graphData.reverse();
     highChartsObj.series = this.graphData;
     return highChartsObj;
   }
@@ -562,7 +568,7 @@ function toggleDarkGraphs() {
   if (game) {
     var darkcss = document.getElementById("dark-graph.css")
     var dark = document.getElementById("blackCB").checked;
-    saveSetting("darkTheme", dark)
+    saveSetting("darkTheme", !dark)
     if ((!darkcss && (0 == game.options.menu.darkTheme.enabled || 2 == game.options.menu.darkTheme.enabled)) || MODULES.graphs.useDarkAlways || dark) {
       addDarkGraphs()
     }
@@ -719,7 +725,11 @@ function loadGraphData() {
     }
   }
   var loadedSettings = JSON.parse(localStorage.getItem("GRAPHSETTINGS"));
-  if (loadedSettings !== null) GRAPHSETTINGS = loadedSettings;
+  if (loadedSettings !== null) {
+    for (const [k, v] of Object.entries(loadedSettings)) {
+      GRAPHSETTINGS[k] = v;
+    }
+  }
   // initialize save space for the toggles
   if (GRAPHSETTINGS.toggles == null) GRAPHSETTINGS.toggles = {};
   for (const graph of graphList) {
@@ -863,7 +873,7 @@ const graphList = [
     graphType: "column",
     toggles: ["perHr"],
     columns: [
-      { dataVar: "totalVoidMaps", title: "Voids", color: "#2E0854" },
+      { dataVar: "totalVoidMaps", title: "Voids", color: "#4d0e8c" },
       { dataVar: "totalNullifium", title: "Nu", color: "#8a008a" },
       { dataVar: "heliumOwned", universe: 1, title: "Helium", color: "#5bc0de" },
       { dataVar: "radonOwned", universe: 2, title: "Radon", color: "#5bc0de" },
@@ -1056,13 +1066,15 @@ var GRAPHSETTINGS = {
   rememberSelected: [],
   toggles: {},
   darkTheme: true,
-  maxGraphs: 20, // Highcharts gets a bit angry rendering more graphs, also 30 is the maximum you can fit on the legend before it splits into pages.  
+  maxGraphs: 30, // Highcharts gets a bit angry rendering more graphs, also 30 is the maximum you can fit on the legend before it splits into pages.  
+  portalsDisplayed: 30
 }
 var portalSaveData = {}
 
 // load and initialize the UI
 loadGraphData();
-init()
+createUI()
+document.querySelector("#blackCB").checked = GRAPHSETTINGS.darkTheme
 showHideUnusedGraphs()
 var lastTheme = -1;
 
