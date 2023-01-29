@@ -804,8 +804,10 @@ const getGameData = {
   //magmite: () => { return game.global.magmite },
   //magmamancers: () => { return game.jobs.Magmamancer.owned },
   fluffy: () => {
-    //sum of all previous evo costs + current exp
-    let exp = game.global.fluffyExp;
+    // cap exp at maximum for an evo, because Trimps doesn't do it and it causes horrible horrible bugs
+    let maxExp = Math.floor((1000 * Math.pow(5, Fluffy.getCurrentPrestige())) * ((Math.pow(4, 10) - 1) / (4 - 1)))
+    let exp = Math.min(game.global.fluffyExp, maxExp);
+    //sum of all previous evo costs + current exp, because Trimps doesn't store this
     for (var evo = 0; evo < Fluffy.getCurrentPrestige(); evo++) {
       exp += Math.floor((1000 * Math.pow(5, evo)) * ((Math.pow(4, 10) - 1) / (4 - 1)));;
     }
