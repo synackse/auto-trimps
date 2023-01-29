@@ -1,3 +1,4 @@
+// --------- Backend and helpers --------- 
 function safeLocalStorage(name, data) {
   try {
     if (name === "portalDataCurrent") {
@@ -36,6 +37,131 @@ function saveSetting(key, value) {
   if (key !== null && value !== null) GRAPHSETTINGS[key] = value;
   safeLocalStorage("GRAPHSETTINGS", GRAPHSETTINGS);
 }
+
+// returns _d _h _m _s or _._s
+function formatDuration(timeSince) {
+  let timeObj = {
+    d: Math.floor(timeSince / 86400),
+    h: Math.floor(timeSince / 3600) % 24,
+    m: Math.floor(timeSince / 60) % 60,
+    s: Math.floor(timeSince % 60),
+  }
+  let milliseconds = Math.floor(timeSince % 1 * 10)
+  let timeString = "";
+  let unitsUsed = 0
+  for (const [unit, value] of Object.entries(timeObj)) {
+    if (value === 0 && timeString === "") continue;
+    unitsUsed++;
+    if (value) timeString += value.toString() + unit + " ";
+  }
+  if (unitsUsed <= 1) {
+    timeString = [timeObj.s.toString().padStart(1, "0"), milliseconds.toString(), "s"].join(".");
+  }
+  return timeString
+}
+
+function loadGraphData() {
+  var loadedData = LZString.decompressFromBase64(localStorage.getItem("portalDataHistory"));
+  var currentPortal = JSON.parse(localStorage.getItem("portalDataCurrent"));
+  if (loadedData != "") {
+    var loadedData = JSON.parse(loadedData);
+    if (currentPortal) { loadedData[Object.keys(currentPortal)[0]] = Object.values(currentPortal)[0] }
+    console.log("Graphs: Found portalSaveData")
+    // remake object structure
+    for (const [portalID, portalData] of Object.entries(loadedData)) {
+      portalSaveData[portalID] = new Portal();
+      for (const [k, v] of Object.entries(portalData)) {
+        portalSaveData[portalID][k] = v;
+      }
+    }
+  }
+  var loadedSettings = JSON.parse(localStorage.getItem("GRAPHSETTINGS"));
+  if (loadedSettings !== null) {
+    for (const [k, v] of Object.entries(loadedSettings)) {
+      GRAPHSETTINGS[k] = v;
+    }
+  }
+  // initialize save space for the toggles
+  if (GRAPHSETTINGS.toggles == null) GRAPHSETTINGS.toggles = {};
+  for (const graph of graphList) {
+    if (graph.toggles) {
+      if (GRAPHSETTINGS.toggles[graph.id] === undefined) { GRAPHSETTINGS.toggles[graph.id] = {} }
+      graph.toggles.forEach((toggle) => {
+        if (GRAPHSETTINGS.toggles[graph.id][toggle] === undefined) { GRAPHSETTINGS.toggles[graph.id][toggle] = false }
+      })
+    }
+  }
+  GRAPHSETTINGS.open = false;
+  MODULES.graphs = {}
+  MODULES.graphs.useDarkAlways = false
+}
+
+function clearData(keepN, clrall = false) {
+  let changed = false;
+  let currentPortalNumber = getTotalPortals();
+  if (clrall) {
+    for (const [portalID, portalData] of Object.entries(portalSaveData)) {
+      if (portalData.totalPortals != currentPortalNumber) {
+        delete portalSaveData[portalID];
+        changed = true;
+      }
+    }
+  } else {
+    let totalSaved = Object.keys(portalSaveData).length;
+    for (const [portalID, portalData] of Object.entries(portalSaveData)) {
+      if (totalSaved > keepN && portalData.totalPortals <= currentPortalNumber - keepN) {
+        delete portalSaveData[portalID];
+        totalSaved--;
+        changed = true;
+      }
+    }
+  }
+  if (changed) {
+    savePortalData(true)
+    showHideUnusedGraphs();
+  }
+}
+
+function deleteSpecific() {
+  let portalNum = Number(document.getElementById("deleteSpecificTextBox").value);
+  if (parseInt(portalNum) < 0) { clearData(Math.abs(portalNum)); }
+  else {
+    for (const [portalID, portalData] of Object.entries(portalSaveData)) {
+      if (portalData.totalPortals === portalNum) delete portalSaveData[portalID];
+    }
+  }
+  savePortalData(true)
+  showHideUnusedGraphs();
+}
+
+// Custom Function Helpers
+// diff between x and x-1, or x and initial
+function diff(dataVar, initial) {
+  return function (portal, i) {
+    let e1 = portal.perZoneData[dataVar][i];
+    let e2 = initial ? initial : portal.perZoneData[dataVar][i - 1];
+    if (e1 === null || e2 === null) return null;
+    return e1 - e2
+  }
+}
+
+const formatters = {
+  datetime: function () {
+    let ser = this.series;
+    return '<span style="color:' + ser.color + '" >●</span> ' + ser.name + ": <b>" + formatDuration(this.y / 1000) + "</b><br>";
+  },
+  defaultPoint: function () {
+    var ser = this.series; // 'this' being the highcharts object that uses formatter()
+    return '<span style="color:' + ser.color + '" >●</span> ' + ser.name + ": <b>" + prettify(this.y) + "</b><br>";
+  },
+  defaultAxis: function () {
+    // These are Trimps format functions for durations(modified) and numbers, respectively
+    if (this.dateTimeLabelFormat) return formatDuration(this.value / 1000)
+    else return prettify(this.value);
+  }
+}
+
+// --------- User Interface --------- 
 
 // Create all of the UI elements and load in scripts needed
 // TODO reduce screaming
@@ -149,7 +275,95 @@ function createUI() {
   document.querySelector("#portalCountTextBox").value = GRAPHSETTINGS.portalsDisplayed;
 }
 
-// Graph constructor 
+// Show/hide the universe-specific graph selectors
+function swapGraphUniverse() {
+  let universe = GRAPHSETTINGS.universeSelection;
+  let active = `u${universe}`
+  let inactive = `u${universe == 1 ? 2 : 1}`
+  document.getElementById(`${active}graphSelection`).style.display = '';
+  document.getElementById(`${inactive}graphSelection`).style.display = 'none';
+}
+
+function toggleClearButton() {
+  document.getElementById("clrAllDataBtn").disabled = !document.getElementById("clrChkbox").checked;
+}
+
+function toggleDarkGraphs() {
+  function removeDarkGraphs() {
+    var darkcss = document.getElementById("dark-graph.css");
+    darkcss && (document.head.removeChild(darkcss), debug("Removing dark-graph.css file", "graphs"));
+  }
+  function addDarkGraphs() {
+    var darkcss = document.getElementById("dark-graph.css");
+    if (!darkcss) {
+      var b = document.createElement("link");
+      (b.rel = "stylesheet"), (b.type = "text/css"), (b.id = "dark-graph.css"), (b.href = basepath + "dark-graph.css"), document.head.appendChild(b), debug("Adding dark-graph.css file", "graphs");
+    }
+  }
+  if (game) {
+    var darkcss = document.getElementById("dark-graph.css")
+    var dark = document.getElementById("blackCB").checked;
+    saveSetting("darkTheme", !dark)
+    if ((!darkcss && (0 == game.options.menu.darkTheme.enabled || 2 == game.options.menu.darkTheme.enabled)) || MODULES.graphs.useDarkAlways || dark) {
+      addDarkGraphs()
+    }
+    else {
+      if (darkcss && (1 == game.options.menu.darkTheme.enabled || 3 == game.options.menu.darkTheme.enabled || !dark)) {
+        removeDarkGraphs();
+      }
+    }
+  }
+}
+
+// show/hide graph window
+function autoToggleGraph() {
+  if (game.options.displayed) {
+    toggleSettingsMenu();
+  }
+  var autoSettings = document.getElementById("autoSettings");
+  if (autoSettings && autoSettings.style.display === "block") {
+    autoSettings.style.display = "none";
+  }
+  var ATMenu = document.getElementById("autoTrimpsTabBarMenu");
+  if (ATMenu && ATMenu.style.display === "block") {
+    ATMenu.style.display = "none";
+  }
+  var graphParent = document.getElementById("graphParent");
+  if ("block" === graphParent.style.display) {
+    graphParent.style.display = "none";
+    GRAPHSETTINGS.open = false;
+    trimpStatsDisplayed = false // HACKS disable hotkeys without touching Trimps settings
+  }
+  else {
+    graphParent.style.display = "block";
+    GRAPHSETTINGS.open = true;
+    trimpStatsDisplayed = true // HACKS disable hotkeys without touching Trimps settings
+  }
+}
+
+// close Graphs windows with ESC
+function escapeATWindows() {
+  var a = document.getElementById("tooltipDiv");
+  if ("none" != a.style.display) return void cancelTooltip();
+  var b = document.getElementById("autoSettings");
+  if (b) "block" === b.style.display && (b.style.display = "none");
+  var b = document.getElementById("autoTrimpsTabBarMenu");
+  if (b) "block" === b.style.display && (b.style.display = "none");
+  var c = document.getElementById("graphParent");
+  if (c) "block" === c.style.display && (c.style.display = "none");
+}
+
+document.addEventListener(
+  "keydown",
+  function (a) {
+    1 != game.options.menu.hotkeys.enabled || game.global.preMapsActive || game.global.lockTooltip
+      || ctrlPressed || heirloomsShown || 27 != a.keyCode || escapeATWindows();
+  },
+  true
+);
+
+// --------- Graph handling ---------
+
 function Graph(dataVar, universe, selectorText, additionalParams = {}) {
   // graphTitle, customFunction, useAccumulator, xTitle, yTitle, formatter, xminFloor, yminFloor, yType
   this.dataVar = dataVar
@@ -176,7 +390,6 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
 
   // create an object to pass to Highcharts.Chart
   this.createHighChartsObj = function () {
-    // TODO BUGS Max values sometimes clip
     return {
       chart: {
         renderTo: "graph",
@@ -253,7 +466,7 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
     chart1 = new Highcharts.Chart(HighchartsObj);
     applyRememberedSelections();
   }
-  // prepares data series for Highcharts, and optionally transforms it with toggled options, customFunction and/or useAccumulator
+  // prepares data series for Highcharts, and optionally transforms it with toggled options, customFunction and useAccumulator
   this.lineGraph = function () {
     var highChartsObj = this.createHighChartsObj() // make default object, to be customized as needed
     var item = this.dataVar;
@@ -296,7 +509,7 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
         cleanData.push([Number(index), x]) // highcharts expects number, number, not str, number
       }
       if (activeToggles.includes("perZone") && ["fluffy", "scruffy"].includes(item)) {
-        cleanData.splice(cleanData.length - 1); // current zone is too erratic to include due to weird order of granting resources in Trimps
+        cleanData.splice(cleanData.length - 1); // current zone is too erratic to include due to weird order of granting fluffy exp 
       }
       this.graphData.push({
         name: `Portal ${portal.totalPortals}: ${portal.challenge}`,
@@ -326,7 +539,6 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
     this.graphData = [];
     var yAxis = 0;
     for (const column of activeColumns) {
-      // TODO set colors based on dataVar to make Zek happy
       let cleanData = []
       for (const portal of Object.values(portalSaveData)) {
         if (portal.universe != GRAPHSETTINGS.universeSelection) continue;
@@ -357,37 +569,6 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
     highChartsObj.series = this.graphData;
     return highChartsObj;
   }
-}
-
-// returns _d _h _m _s or _._s
-function formatDuration(timeSince) {
-  let timeObj = {
-    d: Math.floor(timeSince / 86400),
-    h: Math.floor(timeSince / 3600) % 24,
-    m: Math.floor(timeSince / 60) % 60,
-    s: Math.floor(timeSince % 60),
-  }
-  let milliseconds = Math.floor(timeSince % 1 * 10)
-  let timeString = "";
-  let unitsUsed = 0
-  for (const [unit, value] of Object.entries(timeObj)) {
-    if (value === 0 && timeString === "") continue;
-    unitsUsed++;
-    if (value) timeString += value.toString() + unit + " ";
-  }
-  if (unitsUsed <= 1) {
-    timeString = [timeObj.s.toString().padStart(1, "0"), milliseconds.toString(), "s"].join(".");
-  }
-  return timeString
-}
-
-// Show/hide the universe-specific graph selectors
-function swapGraphUniverse() {
-  let universe = GRAPHSETTINGS.universeSelection;
-  let active = `u${universe}`
-  let inactive = `u${universe == 1 ? 2 : 1}`
-  document.getElementById(`${active}graphSelection`).style.display = '';
-  document.getElementById(`${inactive}graphSelection`).style.display = 'none';
 }
 
 function lookupGraph(selectorText) {
@@ -455,228 +636,6 @@ function updateGraph() {
   }
 }
 
-// Stores and updates data for an individual portal
-function Portal() {
-  this.universe = getGameData.universe();
-  this.totalPortals = getTotalPortals();
-  this.challenge = getGameData.challengeActive() === 'Daily'
-    ? getCurrentChallengePane().split('.')[0].substr(13).slice(0, 16) // names dailies by their start date, only moderately cursed
-    : getGameData.challengeActive();
-  this.totalNullifium = getGameData.nullifium();
-  this.totalVoidMaps = getGameData.totalVoids();
-  this.cinf = getGameData.cinf();
-  if (this.universe === 1) {
-    this.totalHelium = game.global.totalHeliumEarned;
-    this.initialFluffy = getGameData.fluffy() - game.stats.bestFluffyExp.value; // adjust for mid-run graph start
-    this.initialDE = getGameData.essence();
-  }
-  if (this.universe === 2) {
-    this.totalRadon = game.global.totalRadonEarned;
-    this.initialScruffy = getGameData.scruffy() - game.stats.bestFluffyExp2.value; // adjust for mid-run graph start
-    this.initialMutes = getGameData.mutatedSeeds();
-    this.s3 = getGameData.s3();
-  }
-  // create an object to collect only the relevant data per zone, without fromEntries because old JS
-  this.perZoneData = {};
-  var perZoneItems = graphList.filter((graph) =>
-    (graph.universe == this.universe || !graph.universe) // only save data relevant to the current universe
-    && graph.conditional() && graph.dataVar) // and for relevant challenges, with datavars 
-    .map((graph) => graph.dataVar)
-    .concat(["currentTime", "mapCount", "timeOnMap"]); // always graph time vars
-  perZoneItems.forEach((name) => this.perZoneData[name] = []);
-
-  // update per zone data and special totals
-  this.update = function (fromMap) { // check source of the update
-    const world = getGameData.world();
-    // TODO Nu is a rather fragile stat, assumes recycling everything on portal. Max throughout the run makes it slightly less crappy.
-    // It would be better to store an initial value, and compare to final value + recycle value
-    this.totalNullifium = Math.max(this.totalNullifium, getGameData.nullifium());
-    this.totalVoidMaps = getGameData.totalVoids();
-    for (const [name, data] of Object.entries(this.perZoneData)) {
-      if (world + 1 < data.length) { // FENCEPOSTING
-        data.splice(world + 1) // trim 'future' zones on reload
-      }
-      if (name === "timeOnMap") {
-        let timeOnMap = getGameData.timeOnMap();
-        if (fromMap) { data[world] = data[world] + timeOnMap || timeOnMap; } // additive per map within a zone
-        continue;
-      }
-      if (name === "mapCount") {
-        if (fromMap && game.global.mapsActive) { data[world] = data[world] + 1 || 1; } // start at 1 because the hook in is before the map is started/finished
-        continue;
-      }
-      data[world] = getGameData[name]();
-    }
-  }
-}
-
-function clearData(keepN, clrall = false) {
-  let changed = false;
-  let currentPortalNumber = getTotalPortals();
-  if (clrall) {
-    for (const [portalID, portalData] of Object.entries(portalSaveData)) {
-      if (portalData.totalPortals != currentPortalNumber) {
-        delete portalSaveData[portalID];
-        changed = true;
-      }
-    }
-  } else {
-    let totalSaved = Object.keys(portalSaveData).length;
-    for (const [portalID, portalData] of Object.entries(portalSaveData)) {
-      if (totalSaved > keepN && portalData.totalPortals <= currentPortalNumber - keepN) {
-        delete portalSaveData[portalID];
-        totalSaved--;
-        changed = true;
-      }
-    }
-  }
-  if (changed) {
-    savePortalData(true)
-    showHideUnusedGraphs();
-  }
-}
-
-function deleteSpecific() {
-  let portalNum = Number(document.getElementById("deleteSpecificTextBox").value);
-  if (parseInt(portalNum) < 0) { clearData(Math.abs(portalNum)); }
-  else {
-    for (const [portalID, portalData] of Object.entries(portalSaveData)) {
-      if (portalData.totalPortals === portalNum) delete portalSaveData[portalID];
-    }
-  }
-  savePortalData(true)
-  showHideUnusedGraphs();
-}
-
-// ####### Here begins old code
-function toggleClearButton() {
-  document.getElementById("clrAllDataBtn").disabled = !document.getElementById("clrChkbox").checked;
-}
-
-function toggleDarkGraphs() {
-  function removeDarkGraphs() {
-    var darkcss = document.getElementById("dark-graph.css");
-    darkcss && (document.head.removeChild(darkcss), debug("Removing dark-graph.css file", "graphs"));
-  }
-  function addDarkGraphs() {
-    var darkcss = document.getElementById("dark-graph.css");
-    if (!darkcss) {
-      var b = document.createElement("link");
-      (b.rel = "stylesheet"), (b.type = "text/css"), (b.id = "dark-graph.css"), (b.href = basepath + "dark-graph.css"), document.head.appendChild(b), debug("Adding dark-graph.css file", "graphs");
-    }
-  }
-  if (game) {
-    var darkcss = document.getElementById("dark-graph.css")
-    var dark = document.getElementById("blackCB").checked;
-    saveSetting("darkTheme", !dark)
-    if ((!darkcss && (0 == game.options.menu.darkTheme.enabled || 2 == game.options.menu.darkTheme.enabled)) || MODULES.graphs.useDarkAlways || dark) {
-      addDarkGraphs()
-    }
-    else {
-      if (darkcss && (1 == game.options.menu.darkTheme.enabled || 3 == game.options.menu.darkTheme.enabled || !dark)) {
-        removeDarkGraphs();
-      }
-    }
-  }
-
-}
-// ####### end scary old code
-
-// Graph Selection 
-
-function saveSelectedGraphs() {
-  if (!chart1) return;
-  for (let i = 0; i < chart1.series.length; i++) {
-    GRAPHSETTINGS.rememberSelected[i] = chart1.series[i].visible;
-  }
-  saveSetting();
-}
-function applyRememberedSelections() {
-  if (chart1.series.length !== GRAPHSETTINGS.rememberSelected.length) {
-    GRAPHSETTINGS.rememberSelected = [] // if the graphlist changes, order is no longer guaranteed
-  }
-  for (let i = 0; i < chart1.series.length; i++) {
-    if (GRAPHSETTINGS.rememberSelected[i] === false) { chart1.series[i].hide(); }
-  }
-}
-function toggleSpecificGraphs() {
-  for (const chart of chart1.series) {
-    chart.visible ? chart.hide() : chart.show();
-  }
-}
-// toggle all graphs to the opposite of the average visible/hidden state
-function toggleAllGraphs() {
-  let visCount = 0;
-  chart1.series.forEach(chart => visCount += chart.visible)
-  for (const chart of chart1.series) {
-    visCount > chart1.series.length / 2 ? chart.hide() : chart.show();
-  }
-}
-
-// show graph window
-function autoToggleGraph() {
-  if (game.options.displayed) {
-    toggleSettingsMenu();
-  }
-  var autoSettings = document.getElementById("autoSettings");
-  if (autoSettings && autoSettings.style.display === "block") {
-    autoSettings.style.display = "none";
-  }
-  var ATMenu = document.getElementById("autoTrimpsTabBarMenu");
-  if (ATMenu && ATMenu.style.display === "block") {
-    ATMenu.style.display = "none";
-  }
-  var graphParent = document.getElementById("graphParent");
-  if ("block" === graphParent.style.display) {
-    graphParent.style.display = "none";
-    GRAPHSETTINGS.open = false;
-    trimpStatsDisplayed = false // HACKS disable hotkeys without touching Trimps settings
-  }
-  else {
-    graphParent.style.display = "block";
-    GRAPHSETTINGS.open = true;
-    trimpStatsDisplayed = true // HACKS disable hotkeys without touching Trimps settings
-  }
-}
-
-// focus main game
-function escapeATWindows() {
-  var a = document.getElementById("tooltipDiv");
-  if ("none" != a.style.display) return void cancelTooltip();
-  var b = document.getElementById("autoSettings");
-  if (b) "block" === b.style.display && (b.style.display = "none");
-  var b = document.getElementById("autoTrimpsTabBarMenu");
-  if (b) "block" === b.style.display && (b.style.display = "none");
-  var c = document.getElementById("graphParent");
-  if (c) "block" === c.style.display && (c.style.display = "none");
-}
-
-document.addEventListener(
-  "keydown",
-  function (a) {
-    1 != game.options.menu.hotkeys.enabled || game.global.preMapsActive || game.global.lockTooltip
-      || ctrlPressed || heirloomsShown || 27 != a.keyCode || escapeATWindows();
-  },
-  true
-);
-
-function getportalID() { return `u${getGameData.universe()} p${getTotalPortals()}` }
-
-function pushData(fromMap) {
-  //debug("Starting Zone " + getGameData.world(), "graphs");
-  const portalID = getportalID();
-  if (!portalSaveData[portalID] || getGameData.world() === 1) { // reset portal data if restarting a portal
-    savePortalData(true) // save old portal to history
-    portalSaveData[portalID] = new Portal();
-  }
-  portalSaveData[portalID].update(fromMap);
-  clearData(GRAPHSETTINGS.maxGraphs);
-  savePortalData(false) // save current portal
-  if (GRAPHSETTINGS.live && GRAPHSETTINGS.open) {
-    updateGraph();
-  }
-}
-
 // Hide graphs that have no collected data
 function showHideUnusedGraphs() {
   let activeUniverses = [];
@@ -709,70 +668,174 @@ function showHideUnusedGraphs() {
   }
 }
 
-function loadGraphData() {
-  var loadedData = LZString.decompressFromBase64(localStorage.getItem("portalDataHistory"));
-  var currentPortal = JSON.parse(localStorage.getItem("portalDataCurrent"));
-  if (loadedData != "") {
-    var loadedData = JSON.parse(loadedData);
-    if (currentPortal) { loadedData[Object.keys(currentPortal)[0]] = Object.values(currentPortal)[0] }
-    console.log("Graphs: Found portalSaveData")
-    // remake object structure
-    for (const [portalID, portalData] of Object.entries(loadedData)) {
-      portalSaveData[portalID] = new Portal();
-      for (const [k, v] of Object.entries(portalData)) {
-        portalSaveData[portalID][k] = v;
+// Graph Selection 
+
+function saveSelectedGraphs() {
+  if (!chart1) return;
+  for (let i = 0; i < chart1.series.length; i++) {
+    GRAPHSETTINGS.rememberSelected[i] = chart1.series[i].visible;
+  }
+  saveSetting();
+}
+function applyRememberedSelections() {
+  if (chart1.series.length !== GRAPHSETTINGS.rememberSelected.length) {
+    GRAPHSETTINGS.rememberSelected = [] // if the graphlist changes, order is no longer guaranteed
+  }
+  for (let i = 0; i < chart1.series.length; i++) {
+    if (GRAPHSETTINGS.rememberSelected[i] === false) { chart1.series[i].hide(); }
+  }
+}
+function toggleSpecificGraphs() {
+  for (const chart of chart1.series) {
+    chart.visible ? chart.hide() : chart.show();
+  }
+}
+// toggle all graphs to the opposite of the average visible/hidden state
+function toggleAllGraphs() {
+  let visCount = 0;
+  chart1.series.forEach(chart => visCount += chart.visible)
+  for (const chart of chart1.series) {
+    visCount > chart1.series.length / 2 ? chart.hide() : chart.show();
+  }
+}
+
+// --------- Portal and Game data handling ---------
+
+// Stores and updates data for an individual portal
+function Portal() {
+  this.universe = getGameData.universe();
+  this.totalPortals = getTotalPortals();
+  this.challenge = getGameData.challengeActive() === 'Daily'
+    ? getCurrentChallengePane().split('.')[0].substr(13).slice(0, 16) // names dailies by their start date, only moderately cursed
+    : getGameData.challengeActive();
+  this.initialNullifium = game.global.nullifium;
+  this.totalNullifium = getGameData.nullifium();
+  this.totalVoidMaps = getGameData.totalVoids();
+  this.cinf = getGameData.cinf();
+  if (this.universe === 1) {
+    this.totalHelium = game.global.totalHeliumEarned;
+    this.initialFluffy = getGameData.fluffy() - game.stats.bestFluffyExp.value; // adjust for mid-run graph start
+    this.initialDE = getGameData.essence();
+  }
+  if (this.universe === 2) {
+    this.totalRadon = game.global.totalRadonEarned;
+    this.initialScruffy = getGameData.scruffy() - game.stats.bestFluffyExp2.value; // adjust for mid-run graph start
+    this.initialMutes = getGameData.mutatedSeeds();
+    this.s3 = getGameData.s3();
+  }
+  // create an object to collect only the relevant data per zone, without fromEntries because old JS
+  this.perZoneData = {};
+  var perZoneItems = graphList.filter((graph) =>
+    (graph.universe == this.universe || !graph.universe) // only save data relevant to the current universe
+    && graph.conditional() && graph.dataVar) // and for relevant challenges, with datavars 
+    .map((graph) => graph.dataVar)
+    .concat(["currentTime", "mapCount", "timeOnMap"]); // always graph time vars
+  perZoneItems.forEach((name) => this.perZoneData[name] = []);
+
+  // update per zone data and special totals
+  this.update = function (fromMap) { // check source of the update
+    const world = getGameData.world();
+    this.totalNullifium = game.global.nullifium - this.initialNullifium + getGameData.nullifium();
+    this.totalVoidMaps = getGameData.totalVoids();
+    for (const [name, data] of Object.entries(this.perZoneData)) {
+      if (world + 1 < data.length) { // FENCEPOSTING (zones are 1 indexed)
+        data.splice(world + 1) // trim 'future' zones on reload
       }
+      if (name === "timeOnMap") {
+        let timeOnMap = getGameData.timeOnMap();
+        if (fromMap) { data[world] = data[world] + timeOnMap || timeOnMap; } // additive per map within a zone
+        continue;
+      }
+      if (name === "mapCount") {
+        if (fromMap && game.global.mapsActive) { data[world] = data[world] + 1 || 1; } // start at 1 because the hook in is before the map is started/finished
+        continue;
+      }
+      data[world] = getGameData[name]();
     }
-  }
-  var loadedSettings = JSON.parse(localStorage.getItem("GRAPHSETTINGS"));
-  if (loadedSettings !== null) {
-    for (const [k, v] of Object.entries(loadedSettings)) {
-      GRAPHSETTINGS[k] = v;
-    }
-  }
-  // initialize save space for the toggles
-  if (GRAPHSETTINGS.toggles == null) GRAPHSETTINGS.toggles = {};
-  for (const graph of graphList) {
-    if (graph.toggles) {
-      if (GRAPHSETTINGS.toggles[graph.id] === undefined) { GRAPHSETTINGS.toggles[graph.id] = {} }
-      graph.toggles.forEach((toggle) => {
-        if (GRAPHSETTINGS.toggles[graph.id][toggle] === undefined) { GRAPHSETTINGS.toggles[graph.id][toggle] = false }
-      })
-    }
-  }
-  GRAPHSETTINGS.open = false;
-  GRAPHSETTINGS.live = false; // TODO unsafe to have this on in liq, disable on load for now. 
-  MODULES.graphs = {}
-  MODULES.graphs.useDarkAlways = false
-}
-
-
-// Custom Function Helpers
-// diff between x and x-1, or x and initial
-function diff(dataVar, initial) {
-  return function (portal, i) {
-    let e1 = portal.perZoneData[dataVar][i];
-    let e2 = initial ? initial : portal.perZoneData[dataVar][i - 1];
-    if (e1 === null || e2 === null) return null;
-    return e1 - e2
   }
 }
 
-const formatters = {
-  datetime: function () {
-    let ser = this.series;
-    return '<span style="color:' + ser.color + '" >●</span> ' + ser.name + ": <b>" + formatDuration(this.y / 1000) + "</b><br>";
+function getportalID() { return `u${getGameData.universe()} p${getTotalPortals()}` }
+
+function pushData(fromMap) {
+  //debug("Starting Zone " + getGameData.world(), "graphs");
+  const portalID = getportalID();
+  if (!portalSaveData[portalID] || getGameData.world() === 1) { // reset portal data if restarting a portal
+    savePortalData(true) // save old portal to history
+    portalSaveData[portalID] = new Portal();
+  }
+  portalSaveData[portalID].update(fromMap);
+  clearData(GRAPHSETTINGS.maxGraphs);
+  savePortalData(false) // save current portal
+  if (GRAPHSETTINGS.live && GRAPHSETTINGS.open) {
+    updateGraph();
+  }
+}
+
+const getGameData = {
+  currentTime: () => { return getGameTime() - game.global.portalTime }, // portalTime changes on pause, 'when a portal started' is not a static concept
+  timeOnMap: () => {
+    // TODO this time is wrong if the player sits in map chamber.  Then again, they might want that time included in 'map' time.
+    let annoyingRemainder = 0;
+    if (game.global.mapStarted < game.global.zoneStarted) {
+      annoyingRemainder = getGameTime() - game.global.mapStarted;
+    }
+    return getGameTime() - game.global.mapStarted - annoyingRemainder;
   },
-  defaultPoint: function () {
-    var ser = this.series; // 'this' being the highcharts object that uses formatter()
-    return '<span style="color:' + ser.color + '" >●</span> ' + ser.name + ": <b>" + prettify(this.y) + "</b><br>";
+  world: () => { return game.global.world },
+  challengeActive: () => { return game.global.challengeActive },
+  voids: () => { return game.global.totalVoidMaps },
+  totalVoids: () => { return game.stats.totalVoidMaps.value },
+  nullifium: () => { return recycleAllExtraHeirlooms(true) },
+  coord: () => { return game.upgrades.Coordination.allowed - game.upgrades.Coordination.done },
+  overkill: () => {
+    // overly complex check for Liq, overly fragile check for overkill cells. please rewrite this at some point.
+    if (game.options.menu.overkillColor.enabled == 0) toggleSetting("overkillColor");
+    if (game.options.menu.liquification.enabled && game.talents.liquification.purchased && !game.global.mapsActive && game.global.gridArray && game.global.gridArray[0] && game.global.gridArray[0].name == "Liquimp")
+      return 100;
+    else return document.getElementById("grid").getElementsByClassName("cellColorOverkill").length;
   },
-  defaultAxis: function () {
-    // These are Trimps format functions for durations(modified) and numbers, respectively
-    if (this.dateTimeLabelFormat) return formatDuration(this.value / 1000)
-    else return prettify(this.value);
-  }
+  zoneTime: () => { return Math.round((getGameTime() - game.global.zoneStarted) * 100) / 100 }, // rounded to x.xs, not used
+  mapbonus: () => { return game.global.mapBonus },
+  empower: () => { return game.global.challengeActive == "Daily" && typeof game.global.dailyChallenge.empower !== "undefined" ? game.global.dailyChallenge.empower.stacks : 0 },
+  lastWarp: () => { return game.global.lastWarp },
+  essence: () => { return game.global.spentEssence + game.global.essence },
+  heliumOwned: () => { return game.resources.helium.owned },
+  //magmite: () => { return game.global.magmite },
+  //magmamancers: () => { return game.jobs.Magmamancer.owned },
+  fluffy: () => {
+    //sum of all previous evo costs + current exp
+    let exp = game.global.fluffyExp;
+    for (var evo = 0; evo < Fluffy.getCurrentPrestige(); evo++) {
+      exp += Math.floor((1000 * Math.pow(5, evo)) * ((Math.pow(4, 10) - 1) / (4 - 1)));;
+    }
+    return exp
+  },
+  //nursery: () => { return game.buildings.Nursery.purchased },
+  amals: () => { return game.jobs.Amalgamator.owned },
+  wonders: () => { return game.challenges.Experience.wonders },
+  scruffy: () => { return game.global.fluffyExp2 },
+  smithies: () => { return game.buildings.Smithy.owned },
+  radonOwned: () => { return game.resources.radon.owned },
+  worshippers: () => { return game.jobs.Worshipper.owned },
+  bonfires: () => { return game.challenges.Hypothermia.bonfires },
+  embers: () => { return game.challenges.Hypothermia.embers },
+  cruffys: () => { return game.challenges.Nurture.level },
+  universe: () => { return game.global.universe },
+  s3: () => { return game.global.lastRadonPortal },
+  u1hze: () => { return game.global.highestLevelCleared },
+  u2hze: () => { return game.global.highestRadonLevelCleared },
+  c23increase: () => {
+    if (game.global.challengeActive !== "" && game.global.runningChallengeSquared) {
+      return Math.max(0, getIndividualSquaredReward(game.global.challengeActive, game.global.world) - getIndividualSquaredReward(game.global.challengeActive));
+    }
+    else { return 0; }
+  },
+  cinf: () => { return countChallengeSquaredReward(false, false, true) },
+  mutatedSeeds: () => { return game.global.mutatedSeedsSpent + game.global.mutatedSeeds }
 }
+
+// --------- Data structures ---------
 
 // Create all the Graph objects
 // Graph(dataVar, universe, selectorText, additionalParams)
@@ -885,74 +948,8 @@ const graphList = [
   }),
 ]
 
-const getGameData = {
-  currentTime: () => { return getGameTime() - game.global.portalTime }, // portalTime changes on pause, 'when a portal started' is not a static concept
-  // TODO need to store a 'last exited map' time ? maybe?  Map time is rough.
-  timeOnMap: () => {
-    let annoyingRemainder = 0;
-    if (game.global.mapStarted < game.global.zoneStarted) {
-      annoyingRemainder = getGameTime() - game.global.mapStarted;
-    }
-    //if (game.global.mapsActive) {
-    return getGameTime() - game.global.mapStarted - annoyingRemainder;
-    //}
-    //else return 0
-  },
-  world: () => { return game.global.world },
-  challengeActive: () => { return game.global.challengeActive },
-  voids: () => { return game.global.totalVoidMaps },
-  totalVoids: () => { return game.stats.totalVoidMaps.value },
-  nullifium: () => { return recycleAllExtraHeirlooms(true) },
-  coord: () => { return game.upgrades.Coordination.allowed - game.upgrades.Coordination.done },
-  overkill: () => {
-    // overly complex check for Liq, overly fragile check for overkill cells. please rewrite this at some point.
-    if (game.options.menu.overkillColor.enabled == 0) toggleSetting("overkillColor");
-    if (game.options.menu.liquification.enabled && game.talents.liquification.purchased && !game.global.mapsActive && game.global.gridArray && game.global.gridArray[0] && game.global.gridArray[0].name == "Liquimp")
-      return 100;
-    else return document.getElementById("grid").getElementsByClassName("cellColorOverkill").length;
-  },
-  zoneTime: () => { return Math.round((getGameTime() - game.global.zoneStarted) * 100) / 100 }, // rounded to x.xs, not used
-  mapbonus: () => { return game.global.mapBonus },
-  empower: () => { return game.global.challengeActive == "Daily" && typeof game.global.dailyChallenge.empower !== "undefined" ? game.global.dailyChallenge.empower.stacks : 0 },
-  lastWarp: () => { return game.global.lastWarp },
-  essence: () => { return game.global.spentEssence + game.global.essence },
-  heliumOwned: () => { return game.resources.helium.owned },
-  //magmite: () => { return game.global.magmite },
-  //magmamancers: () => { return game.jobs.Magmamancer.owned },
-  fluffy: () => {
-    //sum of all previous evo costs + current exp
-    let exp = game.global.fluffyExp;
-    for (var evo = 0; evo < Fluffy.getCurrentPrestige(); evo++) {
-      exp += Math.floor((1000 * Math.pow(5, evo)) * ((Math.pow(4, 10) - 1) / (4 - 1)));;
-    }
-    return exp
-  },
-  //nursery: () => { return game.buildings.Nursery.purchased },
-  amals: () => { return game.jobs.Amalgamator.owned },
-  wonders: () => { return game.challenges.Experience.wonders },
-  scruffy: () => { return game.global.fluffyExp2 },
-  smithies: () => { return game.buildings.Smithy.owned },
-  radonOwned: () => { return game.resources.radon.owned },
-  worshippers: () => { return game.jobs.Worshipper.owned },
-  bonfires: () => { return game.challenges.Hypothermia.bonfires },
-  embers: () => { return game.challenges.Hypothermia.embers },
-  cruffys: () => { return game.challenges.Nurture.level },
-  universe: () => { return game.global.universe },
-  s3: () => { return game.global.lastRadonPortal },
-  u1hze: () => { return game.global.highestLevelCleared },
-  u2hze: () => { return game.global.highestRadonLevelCleared },
-  c23increase: () => {
-    if (game.global.challengeActive !== "" && game.global.runningChallengeSquared) {
-      return Math.max(0, getIndividualSquaredReward(game.global.challengeActive, game.global.world) - getIndividualSquaredReward(game.global.challengeActive));
-    }
-    else { return 0; }
-  },
-  cinf: () => { return countChallengeSquaredReward(false, false, true) },
-  mutatedSeeds: () => { return game.global.mutatedSeedsSpent + game.global.mutatedSeeds }
-}
-
 // rules for toggle based graphs
-var toggledGraphs = {
+const toggledGraphs = {
   mapCount: {
     exclude: ["mapTime", "mapPct"],
     graphMods: (graph, highChartsObj) => {
@@ -1056,7 +1053,9 @@ var toggledGraphs = {
   },
 }
 
-// Global vars
+
+// --------- Runtime ---------
+
 var chart1;
 var lastSave = new Date()
 var GRAPHSETTINGS = {
@@ -1066,7 +1065,7 @@ var GRAPHSETTINGS = {
   rememberSelected: [],
   toggles: {},
   darkTheme: true,
-  maxGraphs: 30, // Highcharts gets a bit angry rendering more graphs, also 30 is the maximum you can fit on the legend before it splits into pages.  
+  maxGraphs: 100, // Highcharts gets a bit angry rendering more graphs, 30 is the maximum you can fit on the legend before it splits into pages.
   portalsDisplayed: 30
 }
 var portalSaveData = {}
@@ -1074,14 +1073,11 @@ var portalSaveData = {}
 // load and initialize the UI
 loadGraphData();
 createUI()
-document.querySelector("#blackCB").checked = GRAPHSETTINGS.darkTheme
 showHideUnusedGraphs()
 var lastTheme = -1;
 
 
-
-
-//Wrappers for Trimps functions to reliably collect data
+// --------- Trimps Wrappers ---------
 
 //On Zone transition
 var originalnextWorld = nextWorld;
