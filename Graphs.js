@@ -161,6 +161,10 @@ const formatters = {
   }
 }
 
+function last(arr) {
+  return arr[arr.length - 1]
+}
+
 // --------- User Interface --------- 
 
 // Create all of the UI elements and load in scripts needed
@@ -504,7 +508,7 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
             debug(`Error graphing data on: ${item} ${toggle}, ${e.message}`)
           }
         }
-        if (this.useAccumulator) x += cleanData.at(-1) !== undefined ? cleanData.at(-1)[1] : 0;
+        if (this.useAccumulator) { x += last(cleanData) !== undefined ? last(cleanData)[1] : 0; }
         if (this.typeCheck && typeof x != this.typeCheck) x = null;
         cleanData.push([Number(index), x]) // highcharts expects number, number, not str, number
       }
@@ -544,10 +548,10 @@ function Graph(dataVar, universe, selectorText, additionalParams = {}) {
         if (portal.universe != GRAPHSETTINGS.universeSelection) continue;
         let data;
         if (portal[column.dataVar]) data = portal[column.dataVar];
-        if (portal.perZoneData[column.dataVar]) data = portal.perZoneData[column.dataVar].at(-1);
+        if (portal.perZoneData[column.dataVar]) data = last(portal.perZoneData[column.dataVar]);
         if (column.customFunction) data = column.customFunction(portal, data);
         if (GRAPHSETTINGS.toggles[this.id].perHr) { // HACKS a headache for future me if other toggles are wanted here.
-          data = data / (portal.perZoneData.currentTime.at(-1) / 3600000);
+          data = data / (last(portal.perZoneData.currentTime) / 3600000);
         }
         cleanData.push([portal.totalPortals, data])
       }
@@ -1111,7 +1115,7 @@ buildMapGrid = function () {
 }
 
 //On leaving maps for world
-// this captures the last map shen you switch away from maps
+// this captures the last map when you switch away from maps
 var originalmapsSwitch = mapsSwitch;
 mapsSwitch = function () {
   originalmapsSwitch(...arguments)
