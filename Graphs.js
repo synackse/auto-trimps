@@ -1071,7 +1071,7 @@ var GRAPHSETTINGS = {
   rememberSelected: [],
   toggles: {},
   darkTheme: true,
-  maxGraphs: 100, // Highcharts gets a bit angry rendering more graphs, 30 is the maximum you can fit on the legend before it splits into pages.
+  maxGraphs: 60, // Highcharts gets a bit angry rendering more graphs, 30 is the maximum you can fit on the legend before it splits into pages.
   portalsDisplayed: 30
 }
 var portalSaveData = {}
