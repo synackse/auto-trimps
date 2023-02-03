@@ -326,13 +326,14 @@ function escapeATWindows(escPressed = true) {
   for (elemId of ["autoSettings", "autoTrimpsTabBarMenu", "graphParent"]) {
     var elem = document.getElementById(elemId);
     if (!elem) continue;
-    var open = elem.style.display === "block";
-    if (escPressed) open = true; // override to always close
-    elem.style.display = open ? "none" : "block";
-    if (elemId === "graphParent") { // Save Graphs Window state, and disable/enable hotkeys
+    if (elemId === "graphParent") { // toggle Graphs window
+      var open = elem.style.display === "block";
+      if (escPressed) open = true; // override to always close
+      elem.style.display = open ? "none" : "block";
       GRAPHSETTINGS.open = !open;
       trimpStatsDisplayed = !open; // HACKS disable hotkeys without touching Trimps settings
     }
+    else { elem.style.display = "none"; } // close other windows
   }
 }
 
