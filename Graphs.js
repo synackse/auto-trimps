@@ -180,7 +180,7 @@ function createUI() {
   var graphsButton = document.createElement("TD");
   graphsButton.appendChild(document.createTextNode("Graphs"))
   graphsButton.setAttribute("class", "btn btn-default")
-  graphsButton.setAttribute("onclick", "autoToggleGraph(); drawGraph(); swapGraphUniverse();");
+  graphsButton.setAttribute("onclick", "escapeATWindows(false); drawGraph(); swapGraphUniverse();");
 
   var settingbarRow = document.getElementById("settingsTable").firstElementChild.firstElementChild;
   settingbarRow.insertBefore(graphsButton, settingbarRow.childNodes[10])
@@ -319,44 +319,24 @@ function toggleDarkGraphs() {
   }
 }
 
-// show/hide graph window
-function autoToggleGraph() {
-  if (game.options.displayed) {
-    toggleSettingsMenu();
-  }
-  var autoSettings = document.getElementById("autoSettings");
-  if (autoSettings && autoSettings.style.display === "block") {
-    autoSettings.style.display = "none";
-  }
-  var ATMenu = document.getElementById("autoTrimpsTabBarMenu");
-  if (ATMenu && ATMenu.style.display === "block") {
-    ATMenu.style.display = "none";
-  }
-  var graphParent = document.getElementById("graphParent");
-  if ("block" === graphParent.style.display) {
-    graphParent.style.display = "none";
-    GRAPHSETTINGS.open = false;
-    trimpStatsDisplayed = false // HACKS disable hotkeys without touching Trimps settings
-  }
-  else {
-    graphParent.style.display = "block";
-    GRAPHSETTINGS.open = true;
-    trimpStatsDisplayed = true // HACKS disable hotkeys without touching Trimps settings
-  }
-}
-
-// close Graphs windows with ESC
-function escapeATWindows() {
+// Toggle AT windows with UI, or force close with Esc
+function escapeATWindows(escPressed = true) {
   var a = document.getElementById("tooltipDiv");
-  if ("none" != a.style.display) return void cancelTooltip();
-  var b = document.getElementById("autoSettings");
-  if (b) "block" === b.style.display && (b.style.display = "none");
-  var b = document.getElementById("autoTrimpsTabBarMenu");
-  if (b) "block" === b.style.display && (b.style.display = "none");
-  var c = document.getElementById("graphParent");
-  if (c) "block" === c.style.display && (c.style.display = "none");
+  if (a.style.display != "none") return void cancelTooltip(); // old code, uncertain what it's for or why it's here.
+  for (elemId of ["autoSettings", "autoTrimpsTabBarMenu", "graphParent"]) {
+    var elem = document.getElementById(elemId);
+    if (!elem) continue;
+    var open = elem.style.display === "block";
+    if (escPressed) open = true; // override to always close
+    elem.style.display = open ? "none" : "block";
+    if (elemId === "graphParent") { // Save Graphs Window state, and disable/enable hotkeys
+      GRAPHSETTINGS.open = !open;
+      trimpStatsDisplayed = !open; // HACKS disable hotkeys without touching Trimps settings
+    }
+  }
 }
 
+// Listen for Esc key presses, somehow.  This is ancient eldritch mess, but it works?  
 document.addEventListener(
   "keydown",
   function (a) {
