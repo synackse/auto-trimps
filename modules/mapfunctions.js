@@ -1765,7 +1765,7 @@ function Rdeso(should) {
 
 function RdesoExtra() {
     var desoextra = 1;
-    if (Rshoulddeso == true && getPageSetting('Rdesomaps') == true) {
+    if (Rshoulddesofarm == true) {
         desoextra = 1;
         var health = (RcalcOurHealth() * 2);
         var attack = RcalcOurDmg("avg", false, true);
@@ -2288,7 +2288,7 @@ function Rshould(any, one) {
         if (Rshouldfragfarm) should = "frag";
         else if (Rshouldmayhem) should = "mayhem";
         else if (Rshouldpanda) should = "panda";
-        else if (Rshoulddeso) should = "deso";
+        else if (Rshoulddesofarm) should = "deso";
         else if (Rshouldinsanityfarm) should = "insanity";
         else if (Rshouldalchfarm) should = "alch";
         else if (Rshouldhypofarm) should = "hypo";
