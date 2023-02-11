@@ -1740,3 +1740,19 @@ function stormdynamicHD() {
     }
     return stormHDmult;
 }
+
+function desodynamicHD() {
+    var desozone = 0;
+    var desoHD = 0;
+    var desomult = 0;
+    var desoHDzone = 0;
+    var desoHDmult = 1;
+    if (getPageSetting('Rdesoon') == true && game.global.world > 5 && (game.global.challengeActive == "Desolation" && getPageSetting('Rdesozone') > 0 && getPageSetting('RdesoHD') > 0 && getPageSetting('Rdesomult') > 0)) {
+        desozone = getPageSetting('Rdesozone');
+        desoHD = getPageSetting('RdesoHD');
+        desomult = getPageSetting('Rdesomult');
+        desoHDzone = (game.global.world - desozone);
+        desoHDmult = (desoHDzone == 0) ? desoHD : Math.pow(desomult, desoHDzone) * desoHD;
+    }
+    return desoHDmult;
+}
