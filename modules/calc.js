@@ -1354,7 +1354,7 @@ function RcalcOurHealth() {
     }
     
     if (game.global.challengeActive == "Desolation") {
-	number *= game.challenges.Desolation.trimpHealthMult();
+	health *= game.challenges.Desolation.trimpHealthMult();
     }
 
     if (game.challenges.Nurture.boostsActive() == true) {
