@@ -78,9 +78,13 @@ function calcOurHealth(stance) {
         health *= (Math.pow(game.portal.Resilience.modifier + 1, game.portal.Resilience.level));
     }
 	
+    health *= game.challenges.Frigid.getTrimpMult();
+	
     health *= game.challenges.Mayhem.getTrimpMult();
 
     health *= game.challenges.Pandemonium.getTrimpMult();
+	
+    health *= game.challenges.Desolation.getTrimpMult();
 
     var geneticist = game.jobs.Geneticist;
     if (geneticist.owned > 0) {
@@ -265,10 +269,14 @@ function calcOurDmg(minMaxAvg, incStance, incFlucts) {
     if (game.talents.herbalist.purchased) {
         number *= game.talents.herbalist.getBonus();
     }
+	
+    number *= game.challenges.Frigid.getTrimpMult();
 
     number *= game.challenges.Mayhem.getTrimpMult();
 
     number *= game.challenges.Pandemonium.getTrimpMult();
+	
+    number *= game.challenges.Desolation.getTrimpMult();
 
     if (game.global.sugarRush > 0) {
         number *= sugarRush.getAttackStrength();
@@ -509,6 +517,9 @@ function calcEnemyAttackCore(type, zone, cell, name, minOrMax, customAttack) {
         for (var i=1; i<zone; i++) amt = Math.ceil(amt * 1.25);
         attack *= amt;
     }
+    if (game.global.challengeActive == "Frigid") { 
+	attack *= game.challenges.Frigid.getEnemyMult();
+    }
 
     //Dailies
     if (game.global.challengeActive == "Daily") {
@@ -618,6 +629,8 @@ function calcBadGuyDmg(enemy, attack, daily, maxormin, disableFlucts) {
             var zoneModifier = Math.floor(game.global.world / game.challenges[game.global.challengeActive].zoneScaleFreq);
             oblitMult *= Math.pow(game.challenges[game.global.challengeActive].zoneScaling, zoneModifier);
             number *= oblitMult;
+        } else if (game.global.challengeActive == "Frigid") { 
+	    number *= game.challenges.Frigid.getEnemyMult();
         }
         if (daily)
             number = calcDailyAttackMod(number);
@@ -711,6 +724,9 @@ function calcEnemyHealth(world, map) {
             health *= 7.5;
         } else health *= 0.1;
     }
+    if (game.global.challengeActive == "Frigid") { 
+	health *= game.challenges.Frigid.getEnemyMult();
+    }
     if (game.global.spireActive) {
         health = calcSpire(99, game.global.gridArray[99].name, 'health');
     }
@@ -775,6 +791,10 @@ function calcEnemyHealthCore(type, zone, cell, name, customHealth) {
         var zoneModifier = Math.floor(game.global.world / game.challenges[game.global.challengeActive].zoneScaleFreq);
         oblitMult *= Math.pow(game.challenges[game.global.challengeActive].zoneScaling, zoneModifier);
         health *= oblitMult;
+    }
+	
+    if (game.global.challengeActive == "Frigid") { 
+	health *= game.challenges.Frigid.getEnemyMult();
     }
 
     return health;
@@ -1094,6 +1114,9 @@ function RcalcOurDmg(minMaxAvg, equality) {
 
     // Panda Completions
     number *= game.challenges.Pandemonium.getTrimpMult();
+	
+    // Deso Completions
+    number *= game.challenges.Desolation.getTrimpMult();
 
     // Heirloom
     number *= 1 + calcHeirloomBonus('Shield', 'trimpAttack', 1, true) / 100;
@@ -1167,6 +1190,9 @@ function RcalcOurDmg(minMaxAvg, equality) {
     }
     if (game.global.challengeActive === 'Smithless') {
 	if (game.challenges.Smithless.fakeSmithies > 0) number *= Math.pow(1.25, game.challenges.Smithless.fakeSmithies);
+    }
+    if (game.global.challengeActive == "Desolation") {
+	number *= game.challenges.Desolation.trimpAttackMult();
     }
 
     // Dailies
@@ -1278,6 +1304,10 @@ function RcalcOurHealth() {
     if (game.global.pandCompletions > 0) {
         health *= game.challenges.Pandemonium.getTrimpMult();
     }
+	
+    if (game.global.desoCompletions > 0) {
+        health *= game.challenges.Desolation.getTrimpMult();
+    }
 
     //AutoBattle
     health *= autoBattle.bonuses.Stats.getMult();
@@ -1321,6 +1351,10 @@ function RcalcOurHealth() {
         if (game.challenges.Berserk.frenzyStacks <= 0) {
             health *= game.challenges.Berserk.getHealthMult(true);
         }
+    }
+    
+    if (game.global.challengeActive == "Desolation") {
+	number *= game.challenges.Desolation.trimpHealthMult();
     }
 
     if (game.challenges.Nurture.boostsActive() == true) {
@@ -1418,6 +1452,9 @@ function RcalcBadGuyDmg(enemy, attack, equality) {
         number *= game.challenges.Pandemonium.getEnemyMult();
         number *= game.challenges.Pandemonium.getBossMult();
     }
+    if (game.global.challengeActive == "Desolation") {
+	number *= game.challenges.Desolation.getEnemyMult();
+    }
     if (game.global.challengeActive == "Storm") {
         number *= game.challenges.Storm.getAttackMult();
     }
@@ -1513,6 +1550,9 @@ function RcalcEnemyHealth(world) {
     if (game.global.challengeActive == "Pandemonium") {
         health *= game.challenges.Pandemonium.getBossMult();
     }
+    if (game.global.challengeActive == "Desolation") {
+	health *= game.challenges.Desolation.getEnemyMult();
+    }
     if (game.global.challengeActive == "Storm") {
         health *= game.challenges.Storm.getHealthMult();
     }
@@ -1580,6 +1620,9 @@ function RcalcEnemyHealthMod(world, cell, name) {
     }
     if (game.global.challengeActive == "Pandemonium") {
         health *= game.challenges.Pandemonium.getBossMult();
+    }
+    if (game.global.challengeActive == "Desolation") {
+	health *= game.challenges.Desolation.getEnemyMult();
     }
     if (game.global.challengeActive == "Storm") {
         health *= game.challenges.Storm.getHealthMult();
@@ -1653,6 +1696,7 @@ function getTotalHealthMod() {
         1;
     healthMulti *= (game.challenges.Nurture.boostsActive() == true) ? game.challenges.Nurture.getStatBoost() : 1;
     healthMulti *= (game.global.challengeActive == 'Alchemy') ? alchObj.getPotionEffect("Potion of Strength") : 1;
+    healthMulti *= (game.global.challengeActive == 'Desolation') ? game.challenges.Desolation.trimpHealthMult() : 1;
 
     // Daily mod
     healthMulti *= (typeof game.global.dailyChallenge.pressure !== 'undefined') ? dailyModifiers.pressure.getMult(game.global.dailyChallenge.pressure.strength, game.global.dailyChallenge.pressure.stacks) : 1;
@@ -1662,9 +1706,13 @@ function getTotalHealthMod() {
 
     // Panda
     healthMulti *= game.challenges.Pandemonium.getTrimpMult();
+	
+    // Deso
+    healthMulti *= game.challenges.Desolation.getTrimpMult();
+    
 
     //Mutations
-    if (u2Mutations.tree.Health.purchased)	{
+    if (u2Mutations.tree.Health.purchased) {
 	healthMulti *= 1.5;
     }
     
