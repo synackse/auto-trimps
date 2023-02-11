@@ -1153,9 +1153,17 @@ function RcalcOurDmg(minMaxAvg, equality) {
         number *= sugarRush.getAttackStrength();
     }
     
+    //Mutations
     if (u2Mutations.tree.Attack.purchased) {
 	number *= 1.5;
     }
+    if (u2Mutations.tree.Brains.purchased) {
+        number *= u2Mutations.tree.Brains.getBonus();
+    }
+    if (u2Mutations.tree.GeneAttack.purchased) {
+	number *= 10;
+    }
+
     if (game.global.world > 200) {
        number *= game.global.novaMutStacks > 0 ? (u2Mutations.types.Nova.trimpAttackMult() * 0.98) : 1;
     }
@@ -1326,9 +1334,13 @@ function RcalcOurHealth() {
     if (game.global.totalSquaredReward > 0) {
         health *= (1 + (game.global.totalSquaredReward / 100));
     }
-
+	
+    //Mutations
     if (u2Mutations.tree.Health.purchased)	{
-		health *= 1.5;
+	health *= 1.5;
+    }
+    if (u2Mutations.tree.GeneHealth.purchased) {
+	health *= 10;
     }
 
     //Challenges
@@ -1714,6 +1726,9 @@ function getTotalHealthMod() {
     //Mutations
     if (u2Mutations.tree.Health.purchased) {
 	healthMulti *= 1.5;
+    }
+    if (u2Mutations.tree.GeneHealth.purchased) {
+	healthMulti *= 10;
     }
     
     // AB
