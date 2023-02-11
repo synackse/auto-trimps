@@ -847,7 +847,7 @@ function initializeAllSettings() {
     createSetting('Rchallengehidedeso', 'Desolation', 'Set this on if you wish to hide the Desolation challenge settings. ', 'boolean', false, null, 'Challenges');
 
     //Quagmire
-    document.getElementById('Rchallengehidehypothermia').parentNode.insertAdjacentHTML('afterend', '<br>');
+    document.getElementById('Rchallengehidedeso').parentNode.insertAdjacentHTML('afterend', '<br>');
     createSetting('Rblackbog', 'Quagmire', 'Enable Bog Running for Quagmire. ', 'boolean', false, null, 'Challenges');
     createSetting('Rblackbogmaz', 'Quagmire Settings', 'Click to open the Quagmire settings. <br> <b>Zone:</b> What zone to start bogging. <br> <b>Black Bogs:</b> How many Black Bogs to at specified zones. <br> <b>Example:</b> If you put Zone: 40\, Black Bogs: 10\, you will run 10 black bogs at zone 40. ', 'infoclick', false, null, 'Challenges');
     createSetting('Rblackbogzone', 'Zone', 'zone', 'multiValue', [-1], null, 'Challenges');
