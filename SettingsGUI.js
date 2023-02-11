@@ -844,6 +844,7 @@ function initializeAllSettings() {
     createSetting('Rchallengehidepanda', 'Pandemonium', 'Set this on if you wish to hide the Pandemonium challenge settings. ', 'boolean', false, null, 'Challenges');
     createSetting('Rchallengehidealchemy', 'Alchemy', 'Set this on if you wish to hide the Alchemy challenge settings. ', 'boolean', false, null, 'Challenges');
     createSetting('Rchallengehidehypothermia', 'Hypothermia', 'Set this on if you wish to hide the Hypothermia challenge settings. ', 'boolean', false, null, 'Challenges');
+    createSetting('Rchallengehidedeso', 'Desolation', 'Set this on if you wish to hide the Desolation challenge settings. ', 'boolean', false, null, 'Challenges');
 
     //Quagmire
     document.getElementById('Rchallengehidehypothermia').parentNode.insertAdjacentHTML('afterend', '<br>');
@@ -917,6 +918,12 @@ function initializeAllSettings() {
     createSetting('Rhypocastle', 'Frozen Castle', 'What zone you wish you run frozen castle on to complete the challenge. Will run castle after voids so make sure thats set up right. ', 'value', '-1', null, 'Challenges');
     createSetting('Rhypovoids', 'After Voids', 'Only run Frozen castle after all voids have been completed. ', 'boolean', true, null, 'Challenges');
     createSetting('Rhypostorage', 'Storage', 'Turn this on to disable buying sheds unless you need more wood for your HF: Bonfire target price (AT AutoBuildings). Essentially this means you wont get accidently bonfires but you may lose out on smithies and shield prestiges. If you use vanilla autobuildings this setting is pointless. Disables AutoStorage until the first Bonfire farm zone that you reach during the challenge.', 'boolean', 'false', null, 'Challenges');
+    
+    //Desolation
+    createSetting('Rdesoon', 'Desolation', 'Turn on Desolation settings. This also controls the entireity of Desolation settings. If you turn this off it will not do anything in Desolation. ', 'boolean', 'false', null, 'Challenges');
+    createSetting('Rdesozone', 'D: Zone', 'What zone to start D: H:D and D: Multiplier. ', 'value', '-1', null, 'Challenges');
+    createSetting('RdesoHD', 'D: H:D', 'What H:D to use inside Desolation. ', 'value', '-1', null, 'Challenges');
+    createSetting('Rdesomult', 'D: Multiplier', 'Starting from the zone above D: Zone, this setting will multiply the H:D you have set in D: H:D. So if D: Zone was 100, D: H:D was 10, D: Multiplier was 1.2, at z101 your H:D target will be 12, then at z102 it will be 14.4 and so on. This way you can account for the zones getting stronger and you will not waste time farming for a really low H:D. ', 'value', '-1', null, 'Challenges');
 
 
 
@@ -1205,6 +1212,9 @@ function initializeAllSettings() {
 
     document.getElementById('Rchallengehidehypothermia').setAttribute('onclick', 'settingChanged("Rchallengehidehypothermia"), modifyParentNode("Rchallengehidehypothermia", "Rhypostorage")');
     modifyParentNode("Rchallengehidehypothermia", "Rhypostorage");
+    
+    document.getElementById('Rchallengehidedeso').setAttribute('onclick', 'settingChanged("Rchallengehidedeso"), modifyParentNode("Rchallengehidedeso", "Rdesomult")');
+    modifyParentNode("Rchallengehidedeso", "Rdesomult");
 
     settingsProfileMakeGUI();
 
@@ -2199,6 +2209,12 @@ function updateCustomButtons() {
     radonon && getPageSetting('Rhypoon') == true ? turnOn("Rhypocastle") : turnOff("Rhypocastle");
     radonon && getPageSetting('Rhypoon') == true ? turnOn("Rhypovoids") : turnOff("Rhypovoids");
     radonon && getPageSetting('Rhypoon') == true ? turnOn("Rhypostorage") : turnOff("Rhypostorage");
+    
+    //Desolation
+    radonon ? turnOn("Rdesoon") : turnOff("Rdesoon");
+    radonon && getPageSetting('Rdesoon') == true ? turnOn("Rdesozone") : turnOff("Rdesozone");
+    radonon && getPageSetting('Rdesoon') == true ? turnOn("RdesoHD") : turnOff("RdesoHD");
+    radonon && getPageSetting('Rdesoon') == true ? turnOn("Rdesomult") : turnOff("Rdesomult");
 
     //Hide Challenges
     radonon ? turnOn("Rchallengehide") : turnOff("Rchallengehide");
@@ -2212,6 +2228,7 @@ function updateCustomButtons() {
     radonon && getPageSetting('Rchallengehide') == true ? turnOn("Rchallengehidepanda") : turnOff("Rchallengehidepanda");
     radonon && getPageSetting('Rchallengehide') == true ? turnOn("Rchallengehidealchemy") : turnOff("Rchallengehidealchemy");
     radonon && getPageSetting('Rchallengehide') == true ? turnOn("Rchallengehidehypothermia") : turnOff("Rchallengehidehypothermia");
+    radonon && getPageSetting('Rchallengehide') == true ? turnOn("Rchallengehidedeso") : turnOff("Rchallengehidedeso");
 
     if (getPageSetting('Rchallengehidequag') == true) {
         turnOff("Rblackbog");
@@ -2284,6 +2301,13 @@ function updateCustomButtons() {
         turnOff("Rhypocastle");
         turnOff("Rhypovoids");
         turnOff("Rhypostorage");
+    }
+    
+    if (getPageSetting('Rchallengehidedeso') == true) {
+        turnOff("Rdesoon");
+        turnOff("Rdesozone");
+        turnOff("RdesoHD");
+        turnOff("Rdesomult");
     }
 
 
