@@ -884,6 +884,7 @@ function RupdateAutoMapsStatus(get) {
     else if (Rshouldmayhem == 1) status = 'Mayhem Attack';
     else if (Rshouldmayhem == 2) status = 'Mayhem Health';
     else if (Rshouldpanda) status = 'Pandemonium';
+    else if (Rshoulddesofarm) status = 'Deso Farming to ' + desodynamicHD().toFixed(2);
     else if (Rshoulddopraid) status = 'Praiding';
     else if (Rdshoulddopraid) status = 'Daily Praiding';
     else if (Rshoulddoquest) status = 'Questing';
@@ -1058,6 +1059,7 @@ function RautoMap() {
     Rshouldhypofarm = false;
     Rhyposhouldwood = true;
     Rshouldstormfarm = false;
+    Rshoulddesofarm = false;
     Rshouldequipfarm = false;
     Rshouldshipfarm = false;
     contractVoid = false;
@@ -1197,6 +1199,14 @@ function RautoMap() {
         Rstormfarm = (getPageSetting('Rstormon') == true && game.global.world > 5 && (game.global.challengeActive == "Storm" && getPageSetting('Rstormzone') > 0 && getPageSetting('RstormHD') > 0 && getPageSetting('Rstormmult') > 0));
         if (Rstormfarm) {
             Rstorm(true);
+        }
+    }
+    
+    //Desolation
+    if (game.global.challengeActive == "Desolation") {
+        Rdesofarm = (getPageSetting('Rdesoon') == true && game.global.world > 5 && (game.global.challengeActive == "Desolation" && getPageSetting('Rdesozone') > 0 && getPageSetting('RdesoHD') > 0 && getPageSetting('Rdesomult') > 0));
+        if (Rdesofarm) {
+            Rdeso(true);
         }
     }
 
@@ -1484,6 +1494,9 @@ function RautoMap() {
             }
             if (Rshouldpanda && getPageSetting('Rpandamaps') == true && !Rshouldtimefarm && !Rdshouldtimefarm) {
                 RlevelMap("panda");
+            }
+            if (Rshoulddesofarm && !Rshouldtimefarm && !Rdshouldtimefarm) {
+                RlevelMap("deso");
             }
             if (Rshouldequipfarm) {
                 RlevelMap("equip");
