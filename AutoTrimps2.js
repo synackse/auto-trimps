@@ -29,21 +29,21 @@ function initializeAutoTrimps() {
 
 var changelogList = [];
 changelogList.push({
+    date: "11/02/2023",
+    version: "v5.2.0",
+    description: "<b>Trimps v5.9.0</b> Added Frigid to calc. Added Desolation AutoDeso. Added mutations to calc. ",
+    isNew: true
+});
+changelogList.push({
     date: "13/11/2022",
     version: "v5.2.1",
     description: "<b>Trimps v5.8.0</b> Added Smithy farming. Changed Scryer stuff. U1 Calc slightly more accurate. Changed some colours and setting descriptions like AutoHeirlooms. Let me know if something is broken. ",
-    isNew: true
+    isNew: false
 });
 changelogList.push({
     date: "28/10/2022",
     version: "v5.2.0",
     description: "<b>Trimps v5.8.0</b> Changed U2 Automaps so there might be problems, let me know if there is. Autogiga, Better stance swap, U1 Calc fixed. ",
-    isNew: false
-});
-changelogList.push({
-    date: "17/08/2022",
-    version: "v5.1.1",
-    description: "<b>Trimps v5.8.0</b> AutoShrine added. Daily Heirloom Swap added. Various bug fixes. ",
     isNew: false
 });
 
