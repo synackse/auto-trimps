@@ -2182,7 +2182,13 @@ var fastimps = [
 function Rmanageequality() {
 
     if (!(game.global.challengeActive == "Exterminate" && getPageSetting('Rexterminateon') == true && getPageSetting('Rexterminateeq') == true && !game.global.mapsActive)) {
-        if ((game.global.challengeActive == "Glass") || (fastimps.includes(getCurrentEnemy().name)) || (game.global.mapsActive && getCurrentMapObject().location == "Void" && game.global.voidBuff == 'doubleAttack') || (!game.global.mapsActive && game.global.gridArray[game.global.lastClearedCell+1].u2Mutation.length > 0)) {
+        if (
+            (game.global.challengeActive == "Glass") || 
+            (fastimps.includes(getCurrentEnemy().name)) || 
+            (game.global.mapsActive && getCurrentMapObject().location == "Void" && game.global.voidBuff == 'doubleAttack') || 
+            (!game.global.mapsActive && game.global.gridArray[game.global.lastClearedCell+1].u2Mutation.length > 0) ||
+            (game.global.mapsActive && game.global.challengeActive == "Desolation")
+        ) {
             if (!game.portal.Equality.scalingActive) {
                 game.portal.Equality.scalingActive = true;
                 manageEqualityStacks();
