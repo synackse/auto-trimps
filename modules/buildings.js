@@ -255,13 +255,13 @@ function buyBuildings() {
 	    var nurserywood = (getBuildingItemPrice(game.buildings.Nursery, "wood", false, 1) * Math.pow(1 - game.portal.Resourceful.modifier, game.portal.Resourceful.level));
     	    var nurserygem = (getBuildingItemPrice(game.buildings.Nursery, "gems", false, 1) * Math.pow(1 - game.portal.Resourceful.modifier, game.portal.Resourceful.level));
     	    var nurserymetal = (getBuildingItemPrice(game.buildings.Nursery, "metal", false, 1) * Math.pow(1 - game.portal.Resourceful.modifier, game.portal.Resourceful.level));
-            if (nurserywood > (game.resources.wood.owned < (nurserywall / 100))) {
+            if (nurserywood > (game.resources.wood.owned * (nurserywall / 100))) {
                     skipNursery = true;
 	    }
-	    else if (nurserygem > (game.resources.gems.owned < (nurserywall / 100))) {
+	    else if (nurserygem > (game.resources.gems.owned * (nurserywall / 100))) {
                     skipNursery = true;
 	    }
-	    else if (nurserymetal > (game.resources.metal.owned < (nurserywall / 100))) {
+	    else if (nurserymetal > (game.resources.metal.owned * (nurserywall / 100))) {
                     skipNursery = true;
 	    }
 	}
