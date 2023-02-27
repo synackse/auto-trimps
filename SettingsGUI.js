@@ -521,6 +521,7 @@ function initializeAllSettings() {
     createSetting('MaxNursery', 'Max Nurseries', 'Advanced. Recommend: -1 until you reach Magma (z230+)', 'value', '-1', null, "Buildings");
 
     //Line 4
+    createSetting('NurseryWall', 'Nursery Wall', 'Only spends N% of resources on nurseries. N being this setting. ', 'value', -1, null, 'Buildings');
     createSetting('NoNurseriesUntil', 'No Nurseries Until z', 'Builds Nurseries starting from this zone. -1 to build from when they are unlocked. ', 'value', '-1', null, 'Buildings');
 
     //RBuildings
@@ -1852,6 +1853,7 @@ function updateCustomButtons() {
     (!radonon && !fuckbuilding) ? turnOn("MaxTribute") : turnOff("MaxTribute");
     (!radonon && !fuckbuilding) ? turnOn("MaxNursery") : turnOff("MaxNursery");
     (!radonon && !fuckbuilding) ? turnOn("NoNurseriesUntil") : turnOff("NoNurseriesUntil");
+    (!radonon && !fuckbuilding) ? turnOn("NurseryWall") : turnOff("NurseryWall");
     (!radonon && !fuckbuilding) ? turnOn("WarpstationCap") : turnOff("WarpstationCap");
     (!radonon && !fuckbuilding) ? turnOn("WarpstationCoordBuy") : turnOff("WarpstationCoordBuy");
     (!radonon && !fuckbuilding) ? turnOn("FirstGigastation") : turnOff("FirstGigastation");
