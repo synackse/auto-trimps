@@ -97,7 +97,7 @@ function calcOurHealth(stance) {
     }
     if (game.global.challengeActive == "Life") {
         health *= game.challenges.Life.getHealthMult();
-    } else if (game.global.challengeActive == "Balance") {
+    } else if (challengeActive("Balance")) {
         health *= game.challenges.Balance.getHealthMult();
     } else if (typeof game.global.dailyChallenge.pressure !== 'undefined') {
         health *= (dailyModifiers.pressure.getMult(game.global.dailyChallenge.pressure.strength, game.global.dailyChallenge.pressure.stacks));
@@ -219,7 +219,7 @@ function calcOurDmg(minMaxAvg, incStance, incFlucts) {
     if (game.global.achievementBonus > 0) {
         number *= (1 + (game.global.achievementBonus / 100));
     }
-    if (game.global.challengeActive == "Discipline") {
+    if (challengeActive("Discipline")) {
         fluctuation = .995;
     } else if (game.portal.Range.level > 0) {
         minFluct = fluctuation - (.02 * game.portal.Range.level);
@@ -231,7 +231,7 @@ function calcOurDmg(minMaxAvg, incStance, incFlucts) {
     if (game.global.roboTrimpLevel > 0) {
         number *= ((0.2 * game.global.roboTrimpLevel) + 1);
     }
-    if (game.global.challengeActive == "Lead" && ((game.global.world % 2) == 1)) {
+    if (challengeActive("Lead") && ((game.global.world % 2) == 1)) {
         number *= 1.5;
     }
     if (game.goldenUpgrades.Battle.currentBonus > 0) {
@@ -303,7 +303,7 @@ function calcOurDmg(minMaxAvg, incStance, incFlucts) {
     if (game.global.challengeActive == "Daily" && game.talents.daily.purchased) {
         number *= 1.5;
     }
-    if (game.global.challengeActive == 'Lead' && game.global.world % 2 == 1 && game.global.world != 179) {
+    if (challengeActive("Lead") && game.global.world % 2 == 1 && game.global.world != 179) {
         number /= 1.5;
     }
     if (game.global.challengeActive == "Daily") {
@@ -389,8 +389,8 @@ function badGuyChallengeMult() {
 
     //WARNING! Something is afoot!
     //A few challenges
-    if      (game.global.challengeActive == "Meditate")   number *= 1.5;
-    else if (game.global.challengeActive == "Watch")      number *= 1.25;
+    if      (challengeActive("Meditate"))   number *= 1.5;
+    else if (challengeActive("Watch"))      number *= 1.25;
     else if (game.global.challengeActive == "Corrupted")  number *= 3;
     else if (game.global.challengeActive == "Domination") number *= 2.5;
     else if (game.global.challengeActive == "Coordinate") number *= getBadCoordLevel();
@@ -506,8 +506,8 @@ function calcEnemyAttackCore(type, zone, cell, name, minOrMax, customAttack) {
 
     //WARNING! Check every challenge!
     //A few challenges
-    if      (game.global.challengeActive == "Meditate")   attack *= 1.5;
-    else if (game.global.challengeActive == "Watch")      attack *= 1.25;
+    if      (challengeActive("Meditate"))   attack *= 1.5;
+    else if (challengeActive("Watch"))      attack *= 1.25;
     else if (game.global.challengeActive == "Corrupted")  attack *= 3;
     else if (game.global.challengeActive == "Scientist" && getScientistLevel() == 5) attack *= 10;
 
@@ -561,8 +561,8 @@ function calcSpecificEnemyAttack(critPower=2, customBlock, customHealth) {
         attack *= badGuyCritMult(enemy, critPower, customBlock, customHealth);
 
     //Challenges - considers the actual scenario for this enemy
-    if (game.global.challengeActive == "Nom" && typeof enemy.nomStacks !== 'undefined') attack *= Math.pow(1.25, enemy.nomStacks)
-    if (game.global.challengeActive == "Lead") attack *= 1 + (0.04 * game.challenges.Lead.stacks);
+    if (challengeActive("Nom") && typeof enemy.nomStacks !== 'undefined') attack *= Math.pow(1.25, enemy.nomStacks)
+    if (challengeActive("Lead")) attack *= 1 + (0.04 * game.challenges.Lead.stacks);
 
     //Magneto Shriek
     if (game.global.usingShriek) attack *= game.mapUnlocks.roboTrimp.getShriekValue();
@@ -608,13 +608,13 @@ function calcBadGuyDmg(enemy, attack, daily, maxormin, disableFlucts) {
     if (!enemy && game.global.challengeActive) {
         if (game.global.challengeActive == "Coordinate") {
             number *= getBadCoordLevel();
-        } else if (game.global.challengeActive == "Meditate") {
+        } else if (challengeActive("Meditate")) {
             number *= 1.5;
-        } else if (enemy && game.global.challengeActive == "Nom" && typeof enemy.nomStacks !== 'undefined') {
+        } else if (enemy && challengeActive("Nom") && typeof enemy.nomStacks !== 'undefined') {
             number *= Math.pow(1.25, enemy.nomStacks);
-        } else if (game.global.challengeActive == "Watch") {
+        } else if (challengeActive("Watch")) {
             number *= 1.25;
-        } else if (game.global.challengeActive == "Lead") {
+        } else if (challengeActive("Lead")) {
             number *= (1 + (game.challenges.Lead.stacks * 0.04));
         } else if (game.global.challengeActive == "Scientist" && getScientistLevel() == 5) {
             number *= 10;
@@ -704,16 +704,16 @@ function calcEnemyHealth(world, map) {
     if (game.global.challengeActive == "Coordinate") {
         health *= getBadCoordLevel();
     }
-    if (game.global.challengeActive == "Toxicity") {
+    if (challengeActive("Toxicity")) {
         health *= 2;
     }
-    if (game.global.challengeActive == 'Lead') {
+    if (challengeActive("Lead")) {
         health *= (1 + (game.challenges.Lead.stacks * 0.04));
     }
-    if (game.global.challengeActive == 'Balance') {
+    if (challengeActive("Balance")) {
         health *= 2;
     }
-    if (game.global.challengeActive == 'Meditate') {
+    if (challengeActive("Meditate")) {
         health *= 2;
     }
     if (game.global.challengeActive == 'Life') {
@@ -758,9 +758,9 @@ function calcEnemyHealthCore(type, zone, cell, name, customHealth) {
     if (customHealth) health = customHealth;
 
     //Challenges
-    if (game.global.challengeActive == "Balance")    health *= 2;
-    if (game.global.challengeActive == "Meditate")   health *= 2;
-    if (game.global.challengeActive == "Toxicity")   health *= 2;
+    if (challengeActive("Balance"))    health *= 2;
+    if (challengeActive("Meditate"))   health *= 2;
+    if (challengeActive("Toxicity"))   health *= 2;
     if (game.global.challengeActive == "Life")       health *= 11;
 
     //Coordinate
@@ -817,7 +817,7 @@ function calcSpecificEnemyHealth(type, zone, cell, forcedName) {
     var health = calcEnemyHealthCore(type, zone, cell, name);
 
     //Challenges - considers the actual scenario for this enemy
-    if (game.global.challengeActive == "Lead") health *= 1 + (0.04 * game.challenges.Lead.stacks);
+    if (challengeActive("Lead")) health *= 1 + (0.04 * game.challenges.Lead.stacks);
     if (game.global.challengeActive == "Domination") {
         var lastCell = (type == "world") ? 100 : game.global.mapGridArray.length;
         if (cell < lastCell) health /= 10;
