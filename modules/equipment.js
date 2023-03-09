@@ -147,7 +147,7 @@ function evaluateEquipmentEfficiency(equipName) {
             }
         }
     }
-    if (game.jobs[mapresourcetojob[equip.Resource]].locked && (game.global.challengeActive != 'Metal')) {
+    if (game.jobs[mapresourcetojob[equip.Resource]].locked && (challengeActive("Metal") == false)) {
 
         Factor = 0;
         Wall = true;
@@ -266,7 +266,7 @@ function autoLevelEquipment() {
     if (game.global.mapBonus > 0) {
         ourDamage *= mapbonusmulti;
     }
-    if (game.global.challengeActive == 'Lead') {
+    if (challengeActive("Lead")) {
         if (game.global.world % 2 == 1 && game.global.world != 179) {
             ourDamage /= 1.5;
         }
