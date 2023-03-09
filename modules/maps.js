@@ -38,7 +38,7 @@ function updateAutoMapsStatus(get) {
 
     //Fail Safes
     if (getPageSetting('AutoMaps') == 0) status = 'Off';
-    else if (game.global.challengeActive == "Mapology" && game.challenges.Mapology.credits < 1) status = 'Out of Map Credits';
+    else if (challengeActive("Mapology") && game.challenges.Mapology.credits < 1) status = 'Out of Map Credits';
 
     //Raiding
     else if (game.global.mapsActive && getCurrentMapObject().level > game.global.world && getCurrentMapObject().location != "Void" && getCurrentMapObject().location != "Bionic") status = 'Prestige Raiding';
@@ -136,7 +136,7 @@ function autoMap() {
         updateAutoMapsStatus();
         return;
     }
-    if (game.global.challengeActive == "Mapology" && game.challenges.Mapology.credits < 1) {
+    if (challengeActive("Mapology") && game.challenges.Mapology.credits < 1) {
         updateAutoMapsStatus();
         return;
     }
@@ -309,7 +309,7 @@ function autoMap() {
         shouldDoHealthMaps = true;
     }
     var restartVoidMap = false;
-    if (game.global.challengeActive == 'Nom' && getPageSetting('FarmWhenNomStacks7')) {
+    if (challengeActive("Nom") && getPageSetting('FarmWhenNomStacks7')) {
         if (game.global.gridArray[99].nomStacks > customVars.NomFarmStacksCutoff[0]) {
             if (game.global.mapBonus != getPageSetting('MaxMapBonuslimit'))
                 shouldDoMaps = true;
@@ -476,7 +476,7 @@ function autoMap() {
                     break;
                 }
                 if (!runningC2) {
-                    if (theMap.name == 'The Prison' && (game.global.challengeActive == "Electricity" || game.global.challengeActive == "Mapocalypse")) {
+                    if (theMap.name == 'The Prison' && (challengeActive("Electricty") || game.global.challengeActive == "Mapocalypse")) {
                         var theMapDifficulty = Math.ceil(theMap.difficulty / 2);
                         if (game.global.world < 80 + theMapDifficulty) continue;
                         selectedMap = theMap.id;
@@ -575,17 +575,17 @@ function autoMap() {
             var eAttack = getEnemyMaxAttack(game.global.world, theMap.size, 'Voidsnimp', theMap.difficulty);
             if (game.global.world >= 181 || (game.global.challengeActive == "Corrupted" && game.global.world >= 60))
                 eAttack *= (getCorruptScale("attack") / 2).toFixed(1);
-            if (game.global.challengeActive == 'Balance') {
+            if (challengeActive("Balance")) {
                 eAttack *= 2;
             }
-            if (game.global.challengeActive == 'Toxicity') {
+            if (challengeActive("Toxicity")) {
                 eAttack *= 5;
             }
             if (getPageSetting('DisableFarm') <= 0)
                 shouldFarm = shouldFarm || false;
             if (!restartVoidMap)
                 selectedMap = theMap.id;
-            if (game.global.mapsActive && getCurrentMapObject().location == "Void" && game.global.challengeActive == "Nom" && getPageSetting('FarmWhenNomStacks7')) {
+            if (game.global.mapsActive && getCurrentMapObject().location == "Void" && challengeActive("Nom") && getPageSetting('FarmWhenNomStacks7')) {
                 if (game.global.mapGridArray[theMap.size - 1].nomStacks >= customVars.NomFarmStacksCutoff[2]) {
                     mapsClicked(true);
                 }
@@ -626,7 +626,7 @@ function autoMap() {
                 selectedMap = "create";
         }
     }
-    if ((game.global.challengeActive == 'Lead' && !challSQ) && !doVoids && (game.global.world % 2 == 0 || game.global.lastClearedCell < customVars.shouldFarmCell)) {
+    if ((challengeActive("Lead") && !challSQ) && !doVoids && (game.global.world % 2 == 0 || game.global.lastClearedCell < customVars.shouldFarmCell)) {
         if (game.global.preMapsActive)
             mapsClicked();
         return;
@@ -665,13 +665,13 @@ function autoMap() {
             }
             if ((!getPageSetting('PowerSaving') || (getPageSetting('PowerSaving') == 2) && doVoids) && game.global.switchToMaps &&
                 (needPrestige || doVoids ||
-                    ((game.global.challengeActive == 'Lead' && !challSQ) && game.global.world % 2 == 1) ||
+                    ((challengeActive("Lead") && !challSQ) && game.global.world % 2 == 1) ||
                     (!enoughDamage && enoughHealth && game.global.lastClearedCell < 9) ||
                     (shouldFarm && game.global.lastClearedCell >= customVars.shouldFarmCell) ||
                     (scryerStuck)) &&
                 (
                     (game.resources.trimps.realMax() <= game.resources.trimps.owned + 1) ||
-                    ((game.global.challengeActive == 'Lead' && !challSQ) && game.global.lastClearedCell > 93) ||
+                    ((challengeActive("Lead") && !challSQ) && game.global.lastClearedCell > 93) ||
                     (doVoids && game.global.lastClearedCell > 70)
                 )
             ) {
@@ -714,7 +714,7 @@ function autoMap() {
             adjustMap('loot', tier[2]);
             biomeAdvMapsSelect.value = autoTrimpSettings.mapselection.selected == "Gardens" ? "Plentiful" : autoTrimpSettings.mapselection.selected;
             updateMapCost();
-            if (shouldFarm || game.global.challengeActive == 'Metal') {
+            if (shouldFarm || challengeActive("Metal")) {
                 biomeAdvMapsSelect.value = game.global.decayDone ? "Plentiful" : "Mountain";
                 updateMapCost();
             }
