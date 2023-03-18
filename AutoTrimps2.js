@@ -4,10 +4,13 @@ var ATversion = 'Zek v5.1.0',
     modulepath = 'modules/';
 null !== atscript && (basepath = atscript.src.replace(/AutoTrimps2\.js$/, ''));
 
-function ATscriptLoad(a, b) {
-    null == b && debug('Wrong Syntax. Script could not be loaded. Try ATscriptLoad(modulepath, \'example.js\'); ');
-    var c = document.createElement('script');
-    null == a && (a = ''), c.src = basepath + a + b + '.js', c.id = b + '_MODULE', document.head.appendChild(c)
+function ATscriptLoad(pathname, modulename) {
+    if (modulename == null) debug("Wrong Syntax. Script could not be loaded. Try ATscriptLoad(modulepath, 'example.js'); ");
+    var script = document.createElement('script');
+    if (pathname == null) pathname = '';
+    script.src = basepath + pathname + modulename + '.js';
+    script.id = modulename + '_MODULE';
+    document.head.appendChild(script);
 }
 
 function ATscriptUnload(a) {
