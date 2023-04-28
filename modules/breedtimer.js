@@ -135,9 +135,9 @@ function ATGA2() {
 		if (getPageSetting('ATGA2timerz') > 0 && getPageSetting('ATGA2timerzt') > 0 && game.global.world >= getPageSetting('ATGA2timerz'))
 		target = new Decimal(getPageSetting('ATGA2timerzt'));
 
-		if (game.global.runningChallengeSquared && getPageSetting('cATGA2timer') > 0 && challengeActive("Electricty") == false && challengeActive("Toxicity") == false && challengeActive("Nom") == false)
+		if (game.global.runningChallengeSquared && getPageSetting('cATGA2timer') > 0 && challengeActive("Electricity") == false && challengeActive("Toxicity") == false && challengeActive("Nom") == false)
 		target = new Decimal(getPageSetting('cATGA2timer'));
-		if (game.global.runningChallengeSquared && getPageSetting('chATGA2timer') > 0 && (challengeActive("Electricty") || challengeActive("Toxicity") || challengeActive("Nom")))
+		if (game.global.runningChallengeSquared && getPageSetting('chATGA2timer') > 0 && (challengeActive("Electricity") || challengeActive("Toxicity") || challengeActive("Nom")))
 		target = new Decimal(getPageSetting('chATGA2timer'));
 
 		if (getPageSetting('dATGA2timer') > 0 && game.global.challengeActive == "Daily")
