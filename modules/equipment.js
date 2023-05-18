@@ -1119,7 +1119,7 @@ function estimateEquipsForZone() {
     var attackNeeded = ourAttack * attackNeededMulti;
     var healthNeeded = ourHealth * healthNeededMulti / (getTotalHealthMod() * game.resources.trimps.maxSoldiers);
 
-    var bonusLevels = {}; // How many levels you'll be getting in each shield-gambeson armor slots
+    var bonusLevels = {}; // How many levels you'll be getting in each shield-gambeson armour slots
     
     while (healthNeeded > 0) {
         var bestArmor = mostEfficientEquipment(bonusLevels)[1];
