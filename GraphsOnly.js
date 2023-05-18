@@ -1,4 +1,4 @@
-var basepath = 'https://Quiaaaa.github.io/AutoTrimps/' //Link to your own Github here if you forked!
+var basepath = 'https://synackse.github.io/AutoTrimps/' //Link to your own Github here if you forked!
 
 //var isSteam = false;
 
