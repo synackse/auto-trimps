@@ -1,6 +1,6 @@
 var ATversion = 'Zek v5.1.0',
     atscript = document.getElementById('AutoTrimps-script'),
-    basepath = 'https://synackse.github.io/AutoTrimps/', //Link to your own Github here if you forked!
+    basepath = 'https://synackse.github.io/auto-trimps/', //Link to your own Github here if you forked!
     modulepath = 'modules/';
 null !== atscript && (basepath = atscript.src.replace(/AutoTrimps2\.js$/, ''));
 
@@ -23,7 +23,7 @@ function initializeAutoTrimps() {
     loadPageVariables();
     ATscriptLoad('', 'SettingsGUI');
     var script = document.createElement('script');
-    script.src = 'https://synackse.github.io/AutoTrimps/Graphs.js';
+    script.src = 'https://synackse.github.io/auto-trimps/Graphs.js';
     document.head.appendChild(script);
     ATmoduleList = ['import-export', 'query', 'calc', 'portal', 'upgrades', 'heirlooms', 'buildings', 'jobs', 'equipment', 'gather', 'stance', 'mapfunctions', 'maps', 'breedtimer', 'dynprestige', 'fight', 'scryer', 'magmite', 'nature', 'other', 'perks', 'fight-info', 'performance', 'ab', 'MAZ'];
     for (var m in ATmoduleList) {
