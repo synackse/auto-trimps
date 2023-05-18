@@ -115,12 +115,12 @@ function evaluateEquipmentEfficiency(equipName) {
     var Wall = false;
 
     var BuyWeaponUpgrades = ((getPageSetting('BuyWeaponsNew') == 1) || (getPageSetting('BuyWeaponsNew') == 2));
-    var BuyArmorUpgrades = ((getPageSetting('BuyArmorNew') == 1) || (getPageSetting('BuyArmorNew') == 2));
+    var BuyArmourUpgrades = ((getPageSetting('BuyArmourNew') == 1) || (getPageSetting('BuyArmourNew') == 2));
     if (!game.upgrades[equip.Upgrade].locked) {
         var CanAfford = canAffordTwoLevel(game.upgrades[equip.Upgrade]);
         if (equip.Equip) {
             var NextEffect = PrestigeValue(equip.Upgrade);
-            if ((game.global.challengeActive == "Scientist" && getScientistLevel() > 2) || (!BuyWeaponUpgrades && !BuyArmorUpgrades))
+            if ((game.global.challengeActive == "Scientist" && getScientistLevel() > 2) || (!BuyWeaponUpgrades && !BuyArmourUpgrades))
                 var NextCost = Infinity;
             else
                 var NextCost = Math.ceil(getNextPrestigeCost(equip.Upgrade) * Math.pow(1 - game.portal.Artisanistry.modifier, game.portal.Artisanistry.level));
@@ -324,19 +324,19 @@ function autoLevelEquipment() {
 
             if (evaluation.StatusBorder == 'red' && windstackingprestige() && !(game.global.world < 60 && game.global.world >= 58 && MODULES["equipment"].waitTill60)) {
                 var BuyWeaponUpgrades = ((getPageSetting('BuyWeaponsNew') == 1) || (getPageSetting('BuyWeaponsNew') == 2));
-                var BuyArmorUpgrades = ((getPageSetting('BuyArmorNew') == 1) || (getPageSetting('BuyArmorNew') == 2));
-                var DelayArmorWhenNeeded = getPageSetting('DelayArmorWhenNeeded');
+                var BuyArmourUpgrades = ((getPageSetting('BuyArmourNew') == 1) || (getPageSetting('BuyArmourNew') == 2));
+                var DelayArmourWhenNeeded = getPageSetting('DelayArmourWhenNeeded');
 
                 if (
                     (BuyWeaponUpgrades && equipmentList[equipName].Stat == 'attack') ||
                     (BuyWeaponUpgrades && equipmentList[equipName].Stat == 'block') ||
-                    (BuyArmorUpgrades && equipmentList[equipName].Stat == 'health' &&
+                    (BuyArmourUpgrades && equipmentList[equipName].Stat == 'health' &&
                         (
-                            (DelayArmorWhenNeeded && !shouldFarm) ||
-                            (DelayArmorWhenNeeded && enoughDamageE) ||
-                            (DelayArmorWhenNeeded && !enoughDamageE && !enoughHealthE) ||
-                            (DelayArmorWhenNeeded && equipmentList[equipName].Resource == 'wood') ||
-                            (!DelayArmorWhenNeeded)
+                            (DelayArmourWhenNeeded && !shouldFarm) ||
+                            (DelayArmourWhenNeeded && enoughDamageE) ||
+                            (DelayArmourWhenNeeded && !enoughDamageE && !enoughHealthE) ||
+                            (DelayArmourWhenNeeded && equipmentList[equipName].Resource == 'wood') ||
+                            (!DelayArmourWhenNeeded)
                         )
                     )
                 )
@@ -357,7 +357,7 @@ function autoLevelEquipment() {
     }
 
     var BuyWeaponLevels = ((getPageSetting('BuyWeaponsNew') == 1) || (getPageSetting('BuyWeaponsNew') == 3));
-    var BuyArmorLevels = ((getPageSetting('BuyArmorNew') == 1) || (getPageSetting('BuyArmorNew') == 3));
+    var BuyArmourLevels = ((getPageSetting('BuyArmourNew') == 1) || (getPageSetting('BuyArmourNew') == 3));
     preBuy3();
     for (var stat in Best) {
         var eqName = Best[stat].Name;
@@ -373,7 +373,7 @@ function autoLevelEquipment() {
                 $eqName.style.border = '2px solid red';
             }
             var maxmap = getPageSetting('MaxMapBonusAfterZone') && doMaxMapBonus;
-            if (BuyArmorLevels && (DaThing.Stat == 'health' || DaThing.Stat == 'block') && (!enoughHealthE || maxmap)) {
+            if (BuyArmourLevels && (DaThing.Stat == 'health' || DaThing.Stat == 'block') && (!enoughHealthE || maxmap)) {
                 game.global.buyAmt = gearamounttobuy;
                 if (DaThing.Equip && !Best[stat].Wall && canAffordBuilding(eqName, null, null, true)) {
                     debug('Leveling equipment ' + eqName, "equips", '*upload3');
@@ -381,7 +381,7 @@ function autoLevelEquipment() {
                 }
             }
             var aalvl2 = getPageSetting('always2');
-            if (BuyArmorLevels && (DaThing.Stat == 'health') && aalvl2 && game.equipment[eqName].level < 2) {
+            if (BuyArmourLevels && (DaThing.Stat == 'health') && aalvl2 && game.equipment[eqName].level < 2) {
                 game.global.buyAmt = 1;
                 if (DaThing.Equip && !Best[stat].Wall && canAffordBuilding(eqName, null, null, true)) {
                     debug('Leveling equipment ' + eqName + " (AlwaysLvl2)", "equips", '*upload3');
@@ -526,7 +526,7 @@ function RevaluateEquipmentEfficiency(equipName) {
     var Wall = false;
 
     var BuyWeaponUpgrades = ((getPageSetting('RBuyWeaponsNew') == 1) || (getPageSetting('RBuyWeaponsNew') == 2));
-    var BuyArmorUpgrades = ((getPageSetting('RBuyArmorNew') == 1) || (getPageSetting('RBuyArmorNew') == 2));
+    var BuyArmourUpgrades = ((getPageSetting('RBuyArmourNew') == 1) || (getPageSetting('RBuyArmourNew') == 2));
     if (!game.upgrades[equip.Upgrade].locked) {
         var CanAfford = canAffordTwoLevel(game.upgrades[equip.Upgrade]);
         if (equip.Equip) {
@@ -666,18 +666,18 @@ function RautoLevelEquipment() {
                 $equipUpgrade.style.color = 'white';
             if (evaluation.StatusBorder == 'red') {
                 var BuyWeaponUpgrades = ((getPageSetting('RBuyWeaponsNew') == 1) || (getPageSetting('RBuyWeaponsNew') == 2));
-                var BuyArmorUpgrades = ((getPageSetting('RBuyArmorNew') == 1) || (getPageSetting('RBuyArmorNew') == 2));
-                var DelayArmorWhenNeeded = getPageSetting('RDelayArmorWhenNeeded');
+                var BuyArmourUpgrades = ((getPageSetting('RBuyArmourNew') == 1) || (getPageSetting('RBuyArmourNew') == 2));
+                var DelayArmourWhenNeeded = getPageSetting('RDelayArmourWhenNeeded');
 
                 if (
                     (BuyWeaponUpgrades && RequipmentList[equipName].Stat == 'attack') ||
-                    (BuyArmorUpgrades && RequipmentList[equipName].Stat == 'health' &&
+                    (BuyArmourUpgrades && RequipmentList[equipName].Stat == 'health' &&
                         (
-                            (DelayArmorWhenNeeded && !shouldFarm) ||
-                            (DelayArmorWhenNeeded && enoughDamageE) ||
-                            (DelayArmorWhenNeeded && !enoughDamageE && !enoughHealthE) ||
-                            (DelayArmorWhenNeeded && RequipmentList[equipName].Resource == 'wood') ||
-                            (!DelayArmorWhenNeeded)
+                            (DelayArmourWhenNeeded && !shouldFarm) ||
+                            (DelayArmourWhenNeeded && enoughDamageE) ||
+                            (DelayArmourWhenNeeded && !enoughDamageE && !enoughHealthE) ||
+                            (DelayArmourWhenNeeded && RequipmentList[equipName].Resource == 'wood') ||
+                            (!DelayArmourWhenNeeded)
                         )
                     )
                 )
@@ -695,7 +695,7 @@ function RautoLevelEquipment() {
     }
 
     var BuyWeaponLevels = ((getPageSetting('RBuyWeaponsNew') == 1) || (getPageSetting('RBuyWeaponsNew') == 3));
-    var BuyArmorLevels = ((getPageSetting('RBuyArmorNew') == 1) || (getPageSetting('RBuyArmorNew') == 3));
+    var BuyArmourLevels = ((getPageSetting('RBuyArmourNew') == 1) || (getPageSetting('RBuyArmourNew') == 3));
     RpreBuy3();
     for (var stat in RBest) {
         var eqName = RBest[stat].Name;
@@ -705,7 +705,7 @@ function RautoLevelEquipment() {
             $eqName.style.color = RBest[stat].Wall ? 'orange' : 'red';
             $eqName.style.border = '2px solid red';
             var maxmap = getPageSetting('RMaxMapBonusAfterZone') && RdoMaxMapBonus;
-            if (BuyArmorLevels && DaThing.Stat == 'health' && (!enoughHealthE || maxmap)) {
+            if (BuyArmourLevels && DaThing.Stat == 'health' && (!enoughHealthE || maxmap)) {
                 game.global.buyAmt = Rgearamounttobuy
                 if (smithylogic(eqName, 'metal', true) && DaThing.Equip && !RBest[stat].Wall && canAffordBuilding(eqName, null, null, true)) {
                     debug('Leveling equipment ' + eqName, "equips", '*upload3');
@@ -713,7 +713,7 @@ function RautoLevelEquipment() {
                 }
             }
             var aalvl2 = getPageSetting('Ralways2');
-            if (BuyArmorLevels && (DaThing.Stat == 'health') && aalvl2 && game.equipment[eqName].level < 2) {
+            if (BuyArmourLevels && (DaThing.Stat == 'health') && aalvl2 && game.equipment[eqName].level < 2) {
                 game.global.buyAmt = 1;
                 if (smithylogic(eqName, 'metal', true) && DaThing.Equip && !RBest[stat].Wall && canAffordBuilding(eqName, null, null, true)) {
                     debug('Leveling equipment ' + eqName + " (AlwaysLvl2)", "equips", '*upload3');
@@ -1122,12 +1122,12 @@ function estimateEquipsForZone() {
     var bonusLevels = {}; // How many levels you'll be getting in each shield-gambeson armour slots
     
     while (healthNeeded > 0) {
-        var bestArmor = mostEfficientEquipment(bonusLevels)[1];
-        healthNeeded -= game.equipment[bestArmor][RequipmentList[bestArmor].Stat + "Calculated"];
-        if (typeof bonusLevels[bestArmor] === 'undefined') {
-            bonusLevels[bestArmor] = 0;
+        var bestArmour = mostEfficientEquipment(bonusLevels)[1];
+        healthNeeded -= game.equipment[bestArmour][RequipmentList[bestArmour].Stat + "Calculated"];
+        if (typeof bonusLevels[bestArmour] === 'undefined') {
+            bonusLevels[bestArmour] = 0;
         }
-        if (bonusLevels[bestArmor]++ > MAX_EQUIP_DELTA) {
+        if (bonusLevels[bestArmour]++ > MAX_EQUIP_DELTA) {
             return [Infinity, bonusLevels];
         }
     }
