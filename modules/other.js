@@ -46,7 +46,7 @@ function buyWeps() {
 }
 
 function buyArms() {
-    if (!((getPageSetting('BuyArmourNew') == 1) || (getPageSetting('BuyArmourNew') == 3))) return;
+    if (!((getPageSetting('BuyArmorNew') == 1) || (getPageSetting('BuyArmorNew') == 3))) return;
     preBuy(), game.global.buyAmt = 10, game.equipment.Shield.level < getPageSetting('CapEquiparm') && canAffordBuilding('Shield', null, null, !0) && buyEquipment('Shield', !0, !0), game.equipment.Boots.level < getPageSetting('CapEquiparm') && canAffordBuilding('Boots', null, null, !0) && buyEquipment('Boots', !0, !0), game.equipment.Helmet.level < getPageSetting('CapEquiparm') && canAffordBuilding('Helmet', null, null, !0) && buyEquipment('Helmet', !0, !0), game.equipment.Pants.level < getPageSetting('CapEquiparm') && canAffordBuilding('Pants', null, null, !0) && buyEquipment('Pants', !0, !0), game.equipment.Shoulderguards.level < getPageSetting('CapEquiparm') && canAffordBuilding('Shoulderguards', null, null, !0) && buyEquipment('Shoulderguards', !0, !0), game.equipment.Breastplate.level < getPageSetting('CapEquiparm') && canAffordBuilding('Breastplate', null, null, !0) && buyEquipment('Breastplate', !0, !0), !game.equipment.Gambeson.locked && game.equipment.Gambeson.level < getPageSetting('CapEquiparm') && canAffordBuilding('Gambeson', null, null, !0) && buyEquipment('Gambeson', !0, !0), postBuy()
 }
 
@@ -1893,9 +1893,9 @@ function fightalways() {
         fightManual();
 }
 
-function armourmagic() {
-    var armourmagicworld = Math.floor((game.global.highestLevelCleared + 1) * 0.8);
-    if (((getPageSetting('carmourmagic') == 1 || getPageSetting('darmourmagic') == 1) && game.global.world >= armourmagicworld && (game.global.soldierHealth <= game.global.soldierHealthMax * 0.4)) || ((getPageSetting('carmourmagic') == 2 || getPageSetting('darmourmagic') == 2) && calcHDratio() >= MODULES["maps"].enoughDamageCutoff && (game.global.soldierHealth <= game.global.soldierHealthMax * 0.4)) || ((getPageSetting('carmourmagic') == 3 || getPageSetting('darmourmagic') == 3) && (game.global.soldierHealth <= game.global.soldierHealthMax * 0.4)))
+function armormagic() {
+    var armormagicworld = Math.floor((game.global.highestLevelCleared + 1) * 0.8);
+    if (((getPageSetting('carmormagic') == 1 || getPageSetting('darmormagic') == 1) && game.global.world >= armormagicworld && (game.global.soldierHealth <= game.global.soldierHealthMax * 0.4)) || ((getPageSetting('carmormagic') == 2 || getPageSetting('darmormagic') == 2) && calcHDratio() >= MODULES["maps"].enoughDamageCutoff && (game.global.soldierHealth <= game.global.soldierHealthMax * 0.4)) || ((getPageSetting('carmormagic') == 3 || getPageSetting('darmormagic') == 3) && (game.global.soldierHealth <= game.global.soldierHealthMax * 0.4)))
         buyArms();
 }
 
@@ -1939,7 +1939,7 @@ function RbuyWeps() {
 }
 
 function RbuyArms() {
-    if (!((getPageSetting('RBuyArmourNew') == 1) || (getPageSetting('RBuyArmourNew') == 3))) return;
+    if (!((getPageSetting('RBuyArmorNew') == 1) || (getPageSetting('RBuyArmorNew') == 3))) return;
     preBuy(), game.global.buyAmt = 10, game.equipment.Shield.level < getPageSetting('RCapEquiparm') && canAffordBuilding('Shield', null, null, !0) && buyEquipment('Shield', !0, !0), game.equipment.Boots.level < getPageSetting('RCapEquiparm') && canAffordBuilding('Boots', null, null, !0) && buyEquipment('Boots', !0, !0), game.equipment.Helmet.level < getPageSetting('RCapEquiparm') && canAffordBuilding('Helmet', null, null, !0) && buyEquipment('Helmet', !0, !0), game.equipment.Pants.level < getPageSetting('RCapEquiparm') && canAffordBuilding('Pants', null, null, !0) && buyEquipment('Pants', !0, !0), game.equipment.Shoulderguards.level < getPageSetting('RCapEquiparm') && canAffordBuilding('Shoulderguards', null, null, !0) && buyEquipment('Shoulderguards', !0, !0), game.equipment.Breastplate.level < getPageSetting('RCapEquiparm') && canAffordBuilding('Breastplate', null, null, !0) && buyEquipment('Breastplate', !0, !0), !game.equipment.Gambeson.locked && game.equipment.Gambeson.level < getPageSetting('RCapEquiparm') && canAffordBuilding('Gambeson', null, null, !0) && buyEquipment('Gambeson', !0, !0), postBuy()
 }
 
@@ -1972,9 +1972,9 @@ function Rfightalways() {
         fightManual();
 }
 
-function Rarmourmagic() {
-    var armourmagicworld = Math.floor((game.global.highestLevelCleared + 1) * 0.8);
-    if (((getPageSetting('Rcarmourmagic') == 1 || getPageSetting('Rdarmourmagic') == 1) && game.global.world >= armourmagicworld && (game.global.soldierHealth <= game.global.soldierHealthMax * 0.4)) || ((getPageSetting('Rcarmourmagic') == 2 || getPageSetting('Rdarmourmagic') == 2) && RcalcHDratio() >= MODULES["maps"].RenoughDamageCutoff && (game.global.soldierHealth <= game.global.soldierHealthMax * 0.4)) || ((getPageSetting('Rcarmourmagic') == 3 || getPageSetting('Rdarmourmagic') == 3) && (game.global.soldierHealth <= game.global.soldierHealthMax * 0.4)))
+function Rarmormagic() {
+    var armormagicworld = Math.floor((game.global.highestLevelCleared + 1) * 0.8);
+    if (((getPageSetting('Rcarmormagic') == 1 || getPageSetting('Rdarmormagic') == 1) && game.global.world >= armormagicworld && (game.global.soldierHealth <= game.global.soldierHealthMax * 0.4)) || ((getPageSetting('Rcarmormagic') == 2 || getPageSetting('Rdarmormagic') == 2) && RcalcHDratio() >= MODULES["maps"].RenoughDamageCutoff && (game.global.soldierHealth <= game.global.soldierHealthMax * 0.4)) || ((getPageSetting('Rcarmormagic') == 3 || getPageSetting('Rdarmormagic') == 3) && (game.global.soldierHealth <= game.global.soldierHealthMax * 0.4)))
         RbuyArms();
 }
 

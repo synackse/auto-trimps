@@ -195,7 +195,7 @@ function ABsolver() {
 
         ABlevelswitch(1);
 
-        items = ['Sword','Armour','Fists_of_Goo','Battery_Stick'];
+        items = ['Sword','Armor','Fists_of_Goo','Battery_Stick'];
         level = [2,1,1,1];
         
 	break;
@@ -204,7 +204,7 @@ function ABsolver() {
 
         ABlevelswitch(2);
 
-        items = ['Sword','Armour','Fists_of_Goo','Battery_Stick'];
+        items = ['Sword','Armor','Fists_of_Goo','Battery_Stick'];
         level = [3,2,1,2];
         
 	break;
@@ -212,7 +212,7 @@ function ABsolver() {
         case 3:
 
         if (autoBattle.bonuses.Extra_Limbs.level < 1) {
-            items = ['Sword','Armour','Fists_of_Goo','Battery_Stick'];
+            items = ['Sword','Armor','Fists_of_Goo','Battery_Stick'];
             level = [4,2,2,2];
             for (var equip in autoBattle.items) {
                 if (autoBattle.items[equip].level < level[items.indexOf(equip)]) {
@@ -227,7 +227,7 @@ function ABsolver() {
         }
         
         if (autoBattle.bonuses.Extra_Limbs.level >= 1) {
-            items = ['Sword','Armour','Fists_of_Goo','Battery_Stick','Pants'];
+            items = ['Sword','Armor','Fists_of_Goo','Battery_Stick','Pants'];
             level = [4,3,2,2,4];
             var proceed = true;
             for (var equip in autoBattle.items) {
@@ -253,7 +253,7 @@ function ABsolver() {
 
         if (!autoBattle.items.Raincoat.owned) {
 	    contract = 'Raincoat';
-            items = ['Sword','Armour','Fists_of_Goo','Battery_Stick','Pants'];
+            items = ['Sword','Armor','Fists_of_Goo','Battery_Stick','Pants'];
             level = [4,3,2,2,4];
             ABlevelswitch(3);
 	}
