@@ -1,6 +1,6 @@
 var ATversion = 'Zek v5.1.0',
     atscript = document.getElementById('AutoTrimps-script'),
-    basepath = 'https://Zorn192.github.io/AutoTrimps/', //Link to your own Github here if you forked!
+    basepath = 'https://synackse.github.io/auto-trimps/', //Link to your own Github here if you forked!
     modulepath = 'modules/';
 null !== atscript && (basepath = atscript.src.replace(/AutoTrimps2\.js$/, ''));
 
@@ -23,7 +23,7 @@ function initializeAutoTrimps() {
     loadPageVariables();
     ATscriptLoad('', 'SettingsGUI');
     var script = document.createElement('script');
-    script.src = 'https://Quiaaaa.github.io/AutoTrimps/Graphs.js';
+    script.src = 'https://synackse.github.io/auto-trimps/Graphs.js';
     document.head.appendChild(script);
     ATmoduleList = ['import-export', 'query', 'calc', 'portal', 'upgrades', 'heirlooms', 'buildings', 'jobs', 'equipment', 'gather', 'stance', 'mapfunctions', 'maps', 'breedtimer', 'dynprestige', 'fight', 'scryer', 'magmite', 'nature', 'other', 'perks', 'fight-info', 'performance', 'ab', 'MAZ'];
     for (var m in ATmoduleList) {
@@ -67,7 +67,7 @@ function printChangelog() {
         '<b>ZӘK Fork</b> - <u>Report any bugs/problems please</u>!\
         <br>Talk with the dev: <b>Zek#0647</b> @ <a target="#" href="https://discord.gg/Ztcnfjr">Zeks Discord Channel</a>\
         <br>Talk with the other Trimpers: <a target="Trimps" href="https://discord.gg/trimps">Trimps Discord Channel</a>\
-        <br>See <a target="#" href="https://github.com/Zorn192/AutoTrimps/blob/gh-pages/README.md">ReadMe</a> Or check <a target="#" href="https://github.com/Zorn192/AutoTrimps/commits/gh-pages" target="#">the commit history</a> (if you want).',
+        <br>See <a target="#" href="https://github.com/synackse/AutoTrimps/blob/gh-pages/README.md">ReadMe</a> Or check <a target="#" href="https://github.com/synackse/AutoTrimps/commits/gh-pages" target="#">the commit history</a> (if you want).',
         action = 'cancelTooltip()',
         title = 'Script Update Notice<br>' + ATversion,
         acceptBtnText = "Thank you for playing AutoTrimps. Accept and Continue.",
