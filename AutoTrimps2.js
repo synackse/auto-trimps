@@ -34,6 +34,12 @@ function initializeAutoTrimps() {
 
 var changelogList = [];
 changelogList.push({
+    date: "23/07/2023",
+    version: "v5.9.1",
+    description: "<b>Trimps v5.9.1</b> Fixed American spelling mistakes. Added push preset. ",
+    isNew: false
+});
+changelogList.push({
     date: "11/02/2023",
     version: "v5.2.0",
     description: "<b>Trimps v5.9.0</b> Added Frigid to calc. Added Desolation AutoDeso. Added mutations to calc. ",
