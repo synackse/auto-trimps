@@ -336,7 +336,7 @@ function initializeAllSettings() {
     createSetting('buyheliumy', 'Buy Heliumy %', 'Buys the Heliumy bonus for <b>100 bones</b> when Daily bonus is above the value set in this setting. Recommend anything above 475. Will not buy if you cant afford to, or value is -1. ', 'value', -1, null, 'Daily');
     createSetting('dfightforever', ['DFA: Off', 'DFA: Non-Empowered', 'DFA: All Dailies'], 'Daily Fight Always. Sends trimps to fight if they\'re not fighting in Daily challenges similar to Toxicity/Nom but not on Bloodthirst/Plagued/Bogged Dailies, regardless of BAF. Non-Empowered will only send to fight if the Daily is not Empowered. Essenitally the same as the one in combat, can use either if you wish, except this will only activate in these daily challenges (duh) ', 'multitoggle', '0', null, 'Daily');
     createSetting('avoidempower', 'Avoid Empower', 'Tries to avoid Empower stacks in Empower Dailies. No harm in this being on, so default is On. ', 'boolean', true, null, 'Daily');
-    createSetting('darmormagic', ['Daily Armour Magic Off', 'DAM: Above 80%', 'DAM: H:D', 'DAM: Always'], 'Will buy Armour to try and prevent death on Bleed/Plague/Bogged Dailies under the 3 conditions. <br><b>Above 80%:</b> Will activate at and above 80% of your HZE. <br><b>H:D:</b> Will activate at and above the H:D you have defined in maps. <br><b>Always</b> Will activate always. <br>All options will activate at or <b>below 25% of your health.</b> ', 'multitoggle', 0, null, "Daily");
+    createSetting('darmourmagic', ['Daily Armour Magic Off', 'DAM: Above 80%', 'DAM: H:D', 'DAM: Always'], 'Will buy Armour to try and prevent death on Bleed/Plague/Bogged Dailies under the 3 conditions. <br><b>Above 80%:</b> Will activate at and above 80% of your HZE. <br><b>H:D:</b> Will activate at and above the H:D you have defined in maps. <br><b>Always</b> Will activate always. <br>All options will activate at or <b>below 25% of your health.</b> ', 'multitoggle', 0, null, "Daily");
     createSetting('dscryvoidmaps', 'Daily VM Scryer', 'Only use in Dailies if you have Scryhard II, for er, obvious reasons. Works without the scryer options. ', 'boolean', false, null, 'Daily');
 
     //Spire
@@ -387,10 +387,10 @@ function initializeAllSettings() {
     createSetting('buyradony', 'Buy Radonculous %', 'Buys the Radonculous bonus for <b>100 bones</b> when Daily bonus is above the value set in this setting. Recommend anything above 475. Will not buy if you cant afford to, or value is -1. ', 'value', -1, null, 'Daily');
     createSetting('Rdfightforever', ['DFA: Off', 'DFA: Non-Empowered', 'DFA: All Dailies'], 'Daily Fight Always. Sends trimps to fight if they\'re not fighting in Daily challenges similar to Toxicity/Nom but not on Bloodthirst/Plagued/Bogged Dailies, regardless of BAF. Non-Empowered will only send to fight if the Daily is not Empowered. Essenitally the same as the one in combat, can use either if you wish, except this will only activate in these daily challenges (duh) ', 'multitoggle', '0', null, 'Daily');
     createSetting('Ravoidempower', 'Avoid Empower', 'Tries to avoid Empower stacks in Empower Dailies. No harm in this being on, so default is On. ', 'boolean', true, null, 'Daily');
-    createSetting('Rdarmormagic', ['Daily Armour Magic Off', 'DAM: Above 80%', 'DAM: H:D', 'DAM: Always'], 'Will buy Armour to try and prevent death on Bleed/Plague/Bogged Dailies under the 3 conditions. <br><b>Above 80%:</b> Will activate at and above 80% of your HZE. <br><b>H:D:</b> Will activate at and above the H:D you have defined in maps. <br><b>Always</b> Will activate always. <br>All options will activate at or <b>below 25% of your health.</b> ', 'multitoggle', 0, null, "Daily");
+    createSetting('Rdarmourmagic', ['Daily Armour Magic Off', 'DAM: Above 80%', 'DAM: H:D', 'DAM: Always'], 'Will buy Armour to try and prevent death on Bleed/Plague/Bogged Dailies under the 3 conditions. <br><b>Above 80%:</b> Will activate at and above 80% of your HZE. <br><b>H:D:</b> Will activate at and above the H:D you have defined in maps. <br><b>Always</b> Will activate always. <br>All options will activate at or <b>below 25% of your health.</b> ', 'multitoggle', 0, null, "Daily");
 
     //dRaiding
-    document.getElementById('Rdarmormagic').parentNode.insertAdjacentHTML('afterend', '<br>');
+    document.getElementById('Rdarmourmagic').parentNode.insertAdjacentHTML('afterend', '<br>');
     createSetting('RdAMPraid', ['Daily Praiding Off', 'Daily Praiding On', 'DPR: Normal'], '<b>MASTER BUTTON</b><br>Toggle Daily Prestige Raiding. Use DPR: Zone, DPR: Raid and DPR: Cell to Raid Prestiges in higher Maps.<br> I.e: World is 95, DPR: Zone is [95,105], DPR: Raid is [105,115], DPR: Cell is 1. Will go into map creation at cell 1, create maps 101, 102, 103, 104, 105 with Prestige option. If you can\'t afford P maps, it will try without. If still unable to afford will buy the highest maps first without buying 101 and 102 for example. Raiding will take longer if you can\'t afford it. Once all maps are created it will run the lowest created then move onto the next till all created maps are finished. If you have enabled DPR: Recycle it will then recycle those maps. DPR: Normal will use the settings in Raiding tab so if they are the same you do not have to copy them over. ', 'multitoggle', 0, null, 'Daily');
     createSetting('RdAMPraidmaz', 'Daily Praiding Settings', 'Click to open the Daily Praiding settings. ', 'infoclick', false, null, 'Daily');
     createSetting('RdAMPraidzone', 'DPR: Zone', 'Zones to Prestige Raid. Can use 95,105,115! ', 'multiValue', [-1], null, 'Daily');
@@ -477,7 +477,7 @@ function initializeAllSettings() {
     createSetting('FinishC2', 'Finish Challenge2', '<b>DONT USE THIS WITH C2 RUNNER</b><br>Finish / Abandon Challenge2 (any) when this zone is reached, if you are running one. For manual use. Recommended: Zones ending with 0 for most Challenge2. Disable with -1. Does not affect Non-Challenge2 runs.', 'value', -1, null, 'C2');
     createSetting('buynojobsc', 'No F/L/M in C2', 'Buys No Farmers, Lumberjacks or Miners in the C2 challenges Watch and Trapper. ', 'boolean', 'false', null, "C2");
     createSetting('cfightforever', 'Tox/Nom Fight Always', 'Sends trimps to fight if they\'re not fighting in the Toxicity and Nom Challenges, regardless of BAF. Essenitally the same as the one in combat, can use either if you wish, except this will only activate in these challenges (duh) ', 'boolean', 'false', null, 'C2');
-    createSetting('carmormagic', ['C2 Armour Magic Off', 'CAM: Above 80%', 'CAM: H:D', 'CAM: Always'], 'Will buy Armour to try and prevent death on Nom/Tox Challenges under the 3 conditions. <br><b>Above 80%:</b> Will activate at and above 80% of your HZE and when your health is sufficiently low. <br><b>H:D:</b> Will activate at and above the H:D you have defined in maps. <br><b>Always</b> Will activate always. <br>All options will activate at or <b>below 25% of your health.</b> ', 'multitoggle', 0, null, "C2");
+    createSetting('carmourmagic', ['C2 Armour Magic Off', 'CAM: Above 80%', 'CAM: H:D', 'CAM: Always'], 'Will buy Armour to try and prevent death on Nom/Tox Challenges under the 3 conditions. <br><b>Above 80%:</b> Will activate at and above 80% of your HZE and when your health is sufficiently low. <br><b>H:D:</b> Will activate at and above the H:D you have defined in maps. <br><b>Always</b> Will activate always. <br>All options will activate at or <b>below 25% of your health.</b> ', 'multitoggle', 0, null, "C2");
     createSetting('mapc2hd', 'Mapology H:D', 'Set your H:D ratio for Mapology. Will not go into maps unless your H:D ratio is above this. -1 to use normal behaviour. ', 'value', '-1', null, 'C2');
     createSetting('novmsc2', 'No VMs', 'Turn off VM running for C2s. Handy for the C2 Runner. ', 'boolean', 'false', null, "C2");
 
@@ -585,7 +585,7 @@ function initializeAllSettings() {
     //Gear
 
     //Line 1
-    createSetting('BuyArmorNew', ['Armour: Buy Neither', 'Armour: Buy Both', 'Armour: Prestiges', 'Armour: Levels'], 'AutoBuys Prestiges and Levels up the most cost efficient Armour available. Gymystic buying is controlled under this setting\'s prestige option', 'multitoggle', 1, null, "Gear"); //This should replace the two below
+    createSetting('BuyArmourNew', ['Armour: Buy Neither', 'Armour: Buy Both', 'Armour: Prestiges', 'Armour: Levels'], 'AutoBuys Prestiges and Levels up the most cost efficient Armour available. Gymystic buying is controlled under this setting\'s prestige option', 'multitoggle', 1, null, "Gear"); //This should replace the two below
     createSetting('BuyWeaponsNew', ['Weapons: Buy Neither', 'Weapons: Buy Both', 'Weapons: Prestiges', 'Weapons: Levels'], 'AutoBuys Prestiges and Levels up the most cost efficient Weapon available.', 'multitoggle', 1, null, "Gear"); //This should replace the two below
     createSetting('CapEquip2', 'Weapon Level Cap', 'Do not level Weapons past this number. Helps stop wasting metal when the script levels-up equip High, only to prestige right after. Recommended value: earlygame 10, lategame: 100. Disable with -1 or 0. <b>NEW:</b> Also sub-caps to 10% of your number during liquified or overkilled(under 25sec) zones. This does not mean the script always hits the cap. Your Equip will now always be leveled to at least 2 since its the most effective level. It will only be leveled however if you dont have enoughDamage. But During Spire, everything will be leveled up to the cap.<br><b>Hidden var: </b>MODULES[\\"equipment\\"].capDivisor = 10; //number to divide your normal cap by.', 'value', 10, null, 'Gear');
     createSetting('CapEquiparm', 'Armour Level Cap', 'Do not level Armour past this number. Helps stop wasting metal when the script levels-up equip High, only to prestige right after. Recommended value: earlygame 10, lategame: 100. Disable with -1 or 0. <b>NEW:</b> Also sub-caps to 10% of your number during liquified or overkilled(under 25sec) zones. This does not mean the script always hits the cap. Your Equip will now always be leveled to at least 2 since its the most effective level. It will only be leveled however if you dont have enoughHealth. But During Spire, everything will be leveled up to the cap.<br><b>Hidden var: </b>MODULES[\\"equipment\\"].capDivisor = 10; //number to divide your normal cap by.', 'value', 10, null, 'Gear');
@@ -596,7 +596,7 @@ function initializeAllSettings() {
     //Line 2
     createSetting('ForcePresZ', 'Force Prestige Z', 'On and after this zone is reached, always try to prestige for everything immediately, ignoring Dynamic Prestige settings and overriding that of Linear Prestige. Prestige Skip mode will exit this. Disable with -1.', 'value', -1, null, 'Gear');
     createSetting('PrestigeSkip1_2', ['Prestige Skip Off', 'Prestige Skip 1 & 2', 'Prestige Skip 1', 'Prestige Skip 2'], '<b>Prestige Skip 1:</b> If there are more than 2 Unbought Prestiges (besides Shield), ie: sitting in your upgrades window but you cant afford them, AutoMaps will not enter Prestige Mode, and/or will exit from it. The amount of unboughts can be configured with this variable MODULES[\\"maps\\"].SkipNumUnboughtPrestiges = 2; <br><b>Prestige Skip 2:</b> If there are 2 or fewer <b>Unobtained Weapon Prestiges in maps</b>, ie: there are less than 2 types to run for, AutoMaps will not enter Prestige Mode, and/or will exit from it. For users who tends to not need the last few prestiges due to resource gain not keeping up. The amount of unboughts can be configured with MODULES.maps.UnearnedPrestigesRequired. If PrestigeSkipMode is enabled, both conditions need to be reached before exiting.', 'multitoggle', 0, null, "Gear");
-    createSetting('DelayArmorWhenNeeded', 'Delay Armour Prestige', 'Delays buying armour prestige-upgrades during Want More Damage or Farming automap-modes, Although if you need health AND damage, it WILL buy armour prestiges tho. NOTE: <b>Applies to Prestiges only</b>', 'boolean', false, null, 'Gear');
+    createSetting('DelayArmourWhenNeeded', 'Delay Armour Prestige', 'Delays buying armour prestige-upgrades during Want More Damage or Farming automap-modes, Although if you need health AND damage, it WILL buy armour prestiges tho. NOTE: <b>Applies to Prestiges only</b>', 'boolean', false, null, 'Gear');
     createSetting('BuyShieldblock', 'Buy Shield Block', 'Will buy the shield block upgrade. CAUTION: If you are progressing past zone 60, you probably don\'t want this :)', 'boolean', false, null, "Gear");
     createSetting('trimpsnotdie', 'Buy Armour on Death', 'Buys 10 levels of Armour when Trimps die. Useful when your trimps die frequentely. ', 'boolean', false, null, "Gear");
     createSetting('gearamounttobuy', 'Gear Levels to Buy', 'Set the amount of Gear Levels to buy for AT. I.e if set to 1 will buy 1 level at a time. Recommended value 1. <b>MUST ALWAYS HAVE A VALUE GREATER THAN 0! </b>', 'value', 1, null, "Gear");
@@ -1705,7 +1705,7 @@ function updateCustomButtons() {
     !radonon ? turnOn("drunnewvoidspoison") : turnOff("drunnewvoidspoison");
     !radonon ? turnOn("avoidempower") : turnOff("avoidempower");
     !radonon ? turnOn("dfightforever") : turnOff("dfightforever");
-    !radonon ? turnOn("darmormagic") : turnOff("darmormagic");
+    !radonon ? turnOn("darmourmagic") : turnOff("darmourmagic");
 
     //DRaid
     !radonon ? turnOn("dPraidingzone") : turnOff("dPraidingzone");
@@ -1765,7 +1765,7 @@ function updateCustomButtons() {
     radonon ? turnOn("RdRunNewVoidsUntilNew") : turnOff("RdRunNewVoidsUntilNew");
     radonon ? turnOn("Ravoidempower") : turnOff("Ravoidempower");
     radonon ? turnOn("Rdfightforever") : turnOff("Rdfightforever");
-    radonon ? turnOn("Rdarmormagic") : turnOff("Rdarmormagic");
+    radonon ? turnOn("Rdarmourmagic") : turnOff("Rdarmourmagic");
 
     //RDRaid
     radonon ? turnOn("RdAMPraid") : turnOff("RdAMPraid");
@@ -1912,7 +1912,7 @@ function updateCustomButtons() {
 
 
     //Gear
-    !radonon ? turnOn("BuyArmorNew") : turnOff("BuyArmorNew");
+    !radonon ? turnOn("BuyuArmourNew") : turnOff("BuyArmourNew");
     !radonon ? turnOn("BuyWeaponsNew") : turnOff("BuyWeaponsNew");
     !radonon ? turnOn("CapEquip2") : turnOff("CapEquip2");
     !radonon ? turnOn("CapEquiparm") : turnOff("CapEquiparm");
@@ -1921,7 +1921,7 @@ function updateCustomButtons() {
     !radonon ? turnOn("Prestige") : turnOff("Prestige");
     !radonon ? turnOn("ForcePresZ") : turnOff("ForcePresZ");
     !radonon ? turnOn("PrestigeSkip1_2") : turnOff("PrestigeSkip1_2");
-    !radonon ? turnOn("DelayArmorWhenNeeded") : turnOff("DelayArmorWhenNeeded");
+    !radonon ? turnOn("DelayArmourWhenNeeded") : turnOff("DelayArmourWhenNeeded");
     !radonon ? turnOn("BuyShieldblock") : turnOff("BuyShieldblock");
     !radonon ? turnOn("trimpsnotdie") : turnOff("trimpsnotdie");
     !radonon ? turnOn("gearamounttobuy") : turnOff("gearamounttobuy");
