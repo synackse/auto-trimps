@@ -843,7 +843,7 @@ const graphList = [
   new Graph("heliumOwned", 1, "Helium", {
     toggles: ["perHr", "perZone", "lifetime"]
   }),
-  new Graph("fluffy", 1, "Fluffy Exp", {
+  new Graph("fluffy", 1, "Fluffy XP", {
     conditional: () => { return getGameData.u1hze() >= 299 && getGameData.fluffy() < 3413330078125000 }, // pre unlock, post E10L10
     customFunction: (portal, i) => { return diff("fluffy", portal.initialFluffy)(portal, i) },
     toggles: ["perHr", "perZone",]
@@ -869,7 +869,7 @@ const graphList = [
   new Graph("radonOwned", 2, "Radon", {
     toggles: ["perHr", "perZone", "lifetime", "s3normalized"]
   }),
-  new Graph("scruffy", 2, "Scruffy Exp", {
+  new Graph("scruffy", 2, "Scruffy XP", {
     customFunction: (portal, i) => { return diff("scruffy", portal.initialScruffy)(portal, i) },
     toggles: ["perHr", "perZone",]
   }),
@@ -927,8 +927,8 @@ const graphList = [
       { dataVar: "totalNullifium", title: "Nu", color: "#8a008a" },
       { dataVar: "heliumOwned", universe: 1, title: "Helium", color: "#5bc0de" },
       { dataVar: "radonOwned", universe: 2, title: "Radon", color: "#5bc0de" },
-      { dataVar: "fluffy", universe: 1, title: "Pet Exp", color: "green", customFunction: (portal, x) => { return x - portal.initialFluffy } },
-      { dataVar: "scruffy", universe: 2, title: "Pet Exp", color: "green", customFunction: (portal, x) => { return x - portal.initialScruffy } },
+      { dataVar: "fluffy", universe: 1, title: "Pet XP", color: "green", customFunction: (portal, x) => { return x - portal.initialFluffy } },
+      { dataVar: "scruffy", universe: 2, title: "Pet XP", color: "green", customFunction: (portal, x) => { return x - portal.initialScruffy } },
       { dataVar: "currentTime", title: "Run Time", type: "datetime", color: "#928DAD" }, // TODO some vars should be on shared axes... woo
       //{ dataVar: "timeOnMap", title: "Mapping Time", type: "datetime", customFunction: () => { } }, // TODO should be sum not max
     ],
