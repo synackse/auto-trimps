@@ -1912,7 +1912,7 @@ function updateCustomButtons() {
 
 
     //Gear
-    !radonon ? turnOn("BuyuArmourNew") : turnOff("BuyArmourNew");
+    !radonon ? turnOn("BuyArmourNew") : turnOff("BuyArmourNew");
     !radonon ? turnOn("BuyWeaponsNew") : turnOff("BuyWeaponsNew");
     !radonon ? turnOn("CapEquip2") : turnOff("CapEquip2");
     !radonon ? turnOn("CapEquiparm") : turnOff("CapEquiparm");
